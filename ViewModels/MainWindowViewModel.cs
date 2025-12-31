@@ -32,6 +32,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private Playlist? _selectedPlaylist;
 
     [ObservableProperty]
+    private bool _canRemoveFromPlaylist;
+
+    [ObservableProperty]
     private ObservableCollection<string> _musicDirectories = new();
 
     [ObservableProperty]
@@ -480,10 +483,14 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             // Update tracks view to show only tracks from this playlist
             Tracks = new ObservableCollection<Track>(playlist.Tracks);
             StatusMessage = $"Playlist: {playlist.Name} ({playlist.Tracks.Count} tracks)";
+
+            // Can only remove from custom playlists
+            CanRemoveFromPlaylist = !playlist.IsDirectoryPlaylist;
         }
         else
         {
             // Show all tracks
+            CanRemoveFromPlaylist = false;
             _ = LoadLibraryAsync();
         }
     }
@@ -500,6 +507,66 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
                 _ = LoadLibraryAsync();
             }
             StatusMessage = $"Deleted playlist '{playlist.Name}'";
+        }
+    }
+
+    [RelayCommand]
+    private void AddSelectedToPlaylist(Playlist targetPlaylist)
+    {
+        var selectedTracks = Tracks.Where(t => t.IsSelected).ToList();
+
+        if (selectedTracks.Count == 0)
+        {
+            StatusMessage = "No tracks selected";
+            return;
+        }
+
+        if (targetPlaylist.IsDirectoryPlaylist)
+        {
+            StatusMessage = "Cannot add tracks to directory playlists";
+            return;
+        }
+
+        var addedCount = 0;
+        foreach (var track in selectedTracks)
+        {
+            // Don't add duplicates
+            if (!targetPlaylist.Tracks.Any(t => t.FilePath == track.FilePath))
+            {
+                targetPlaylist.Tracks.Add(track);
+                addedCount++;
+            }
+        }
+
+        StatusMessage = $"Added {addedCount} track(s) to '{targetPlaylist.Name}'";
+
+        // Clear selection
+        foreach (var track in Tracks)
+        {
+            track.IsSelected = false;
+        }
+    }
+
+    [RelayCommand]
+    private void RemoveTrackFromPlaylist(Track track)
+    {
+        if (SelectedPlaylist == null)
+        {
+            StatusMessage = "No playlist selected";
+            return;
+        }
+
+        if (SelectedPlaylist.IsDirectoryPlaylist)
+        {
+            StatusMessage = "Cannot remove tracks from directory playlists";
+            return;
+        }
+
+        if (SelectedPlaylist.Tracks.Remove(track))
+        {
+            // Also remove from the current view
+            Tracks.Remove(track);
+            StatusMessage = $"Removed from '{SelectedPlaylist.Name}'";
         }
     }
 

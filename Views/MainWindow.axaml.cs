@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -111,6 +112,74 @@ public partial class MainWindow : Window
         {
             e.Handled = true; // Prevent triggering playlist selection
             viewModel.DeletePlaylistCommand.Execute(playlist);
+        }
+    }
+
+    private async void AddToPlaylist_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel) return;
+
+        var customPlaylists = viewModel.Playlists.Where(p => !p.IsDirectoryPlaylist).ToList();
+
+        if (customPlaylists.Count == 0)
+        {
+            viewModel.StatusMessage = "No custom playlists available. Create one first!";
+            return;
+        }
+
+        // Create a simple playlist selector dialog
+        var dialog = new Window
+        {
+            Title = "Add to Playlist",
+            Width = 400,
+            Height = 300,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            CanResize = false
+        };
+
+        var listBox = new ListBox
+        {
+            ItemsSource = customPlaylists,
+            Margin = new Avalonia.Thickness(20)
+        };
+
+        listBox.ItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<Models.Playlist>((playlist, _) =>
+            new TextBlock
+            {
+                Text = $"{playlist.Name} ({playlist.Tracks.Count} tracks)",
+                Padding = new Avalonia.Thickness(8)
+            });
+
+        var addButton = new Button
+        {
+            Content = "Add",
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+            Margin = new Avalonia.Thickness(20, 0, 20, 20)
+        };
+
+        addButton.Click += (s, args) =>
+        {
+            if (listBox.SelectedItem is Models.Playlist selectedPlaylist)
+            {
+                viewModel.AddSelectedToPlaylistCommand.Execute(selectedPlaylist);
+                dialog.Close();
+            }
+        };
+
+        var panel = new StackPanel();
+        panel.Children.Add(listBox);
+        panel.Children.Add(addButton);
+        dialog.Content = panel;
+
+        await dialog.ShowDialog(this);
+    }
+
+    private void RemoveFromPlaylist_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Button button && button.Tag is Models.Track track && DataContext is MainWindowViewModel viewModel)
+        {
+            e.Handled = true; // Prevent triggering track selection
+            viewModel.RemoveTrackFromPlaylistCommand.Execute(track);
         }
     }
 

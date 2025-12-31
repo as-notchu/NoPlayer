@@ -152,6 +152,11 @@
                                 Click="CreatePlaylist_Click"
                                 FontSize="12"
                                 Padding="12,6"/>
+                        <Button Classes="secondary-btn"
+                                Content="Add to Playlist"
+                                Click="AddToPlaylist_Click"
+                                FontSize="12"
+                                Padding="12,6"/>
                         <TextBlock Text="{Binding StatusMessage}"
                                    VerticalAlignment="Center"
                                    Foreground="#888"
@@ -168,7 +173,7 @@
                              DoubleTapped="TrackList_DoubleTapped">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="models:Track">
-                                <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+                                <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
                                     <!-- Selection Checkbox -->
                                     <CheckBox Grid.Column="0"
                                               IsChecked="{Binding IsSelected}"
@@ -211,6 +216,18 @@
                                                Foreground="#666"
                                                FontSize="13"
                                                Margin="16,0,0,0"/>
+
+                                    <!-- Remove from playlist button (only for custom playlists) -->
+                                    <Button Grid.Column="4"
+                                            Content="−"
+                                            Classes="control-btn"
+                                            Width="24" Height="24"
+                                            FontSize="16"
+                                            Padding="0"
+                                            Margin="8,0,0,0"
+                                            Click="RemoveFromPlaylist_Click"
+                                            Tag="{Binding}"
+                                            IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).CanRemoveFromPlaylist}"/>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
