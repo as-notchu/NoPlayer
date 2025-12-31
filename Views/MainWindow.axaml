@@ -1,0 +1,315 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MusicPlayer.ViewModels"
+        xmlns:models="using:MusicPlayer.Models"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+        x:Class="MusicPlayer.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Music Player"
+        Width="1000" Height="700"
+        MinWidth="800" MinHeight="500"
+        Background="#1a1a2e">
+
+    <Window.Styles>
+        <!-- Modern button style -->
+        <Style Selector="Button.control-btn">
+            <Setter Property="Background" Value="#16213e"/>
+            <Setter Property="Foreground" Value="#e8e8e8"/>
+            <Setter Property="CornerRadius" Value="25"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.control-btn:pointerover">
+            <Setter Property="Background" Value="#0f3460"/>
+        </Style>
+        <Style Selector="Button.control-btn:pressed">
+            <Setter Property="Background" Value="#533483"/>
+        </Style>
+
+        <!-- Play button accent -->
+        <Style Selector="Button.play-btn">
+            <Setter Property="Background" Value="#e94560"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="CornerRadius" Value="35"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.play-btn:pointerover">
+            <Setter Property="Background" Value="#ff6b6b"/>
+        </Style>
+        <Style Selector="Button.play-btn:pressed">
+            <Setter Property="Background" Value="#c73e54"/>
+        </Style>
+
+        <!-- Toggle button style -->
+        <Style Selector="ToggleButton.mode-btn">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#888"/>
+            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#333"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="ToggleButton.mode-btn:checked">
+            <Setter Property="Background" Value="#e94560"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#e94560"/>
+        </Style>
+        <Style Selector="ToggleButton.mode-btn:pointerover">
+            <Setter Property="BorderBrush" Value="#e94560"/>
+        </Style>
+
+        <!-- Modern text box -->
+        <Style Selector="TextBox.folder-input">
+            <Setter Property="Background" Value="#16213e"/>
+            <Setter Property="Foreground" Value="#e8e8e8"/>
+            <Setter Property="BorderBrush" Value="#0f3460"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,8"/>
+        </Style>
+
+        <!-- Secondary button -->
+        <Style Selector="Button.secondary-btn">
+            <Setter Property="Background" Value="#0f3460"/>
+            <Setter Property="Foreground" Value="#e8e8e8"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.secondary-btn:pointerover">
+            <Setter Property="Background" Value="#533483"/>
+        </Style>
+
+        <!-- Track list item -->
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="ListBoxItem:pointerover">
+            <Setter Property="Background" Value="#16213e"/>
+        </Style>
+        <Style Selector="ListBoxItem:selected">
+            <Setter Property="Background" Value="#0f3460"/>
+        </Style>
+
+        <!-- Slider styling -->
+        <Style Selector="Slider">
+            <Setter Property="Foreground" Value="#e94560"/>
+        </Style>
+    </Window.Styles>
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Top Bar - Music Folder Settings -->
+        <Border Grid.Row="0" Background="#16213e" Padding="20,16" CornerRadius="0,0,16,16">
+            <Grid ColumnDefinitions="*,Auto,Auto">
+                <TextBox Grid.Column="0"
+                         Classes="folder-input"
+                         Text="{Binding MusicFolderPath}"
+                         Watermark="Select your music folder..."
+                         IsReadOnly="True"/>
+                <Button Grid.Column="1"
+                        Classes="secondary-btn"
+                        Content="Browse"
+                        Margin="12,0,0,0"
+                        Click="BrowseFolder_Click"/>
+                <Button Grid.Column="2"
+                        Classes="secondary-btn"
+                        Content="Refresh"
+                        Margin="8,0,0,0"
+                        Command="{Binding LoadLibraryCommand}"
+                        IsEnabled="{Binding !IsLoading}"/>
+            </Grid>
+        </Border>
+
+        <!-- Track List -->
+        <Border Grid.Row="1" Margin="20,16">
+            <Grid RowDefinitions="Auto,*">
+                <!-- Header -->
+                <TextBlock Grid.Row="0"
+                           Text="Library"
+                           FontSize="24"
+                           FontWeight="Bold"
+                           Foreground="#e8e8e8"
+                           Margin="0,0,0,16"/>
+
+                <ListBox Grid.Row="1"
+                         x:Name="TrackList"
+                         ItemsSource="{Binding Tracks}"
+                         SelectedItem="{Binding CurrentTrack}"
+                         Background="Transparent"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         DoubleTapped="TrackList_DoubleTapped">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:Track">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <!-- Play indicator -->
+                                <Border Grid.Column="0"
+                                        Width="4" Height="40"
+                                        CornerRadius="2"
+                                        Background="#e94560"
+                                        Margin="0,0,16,0"
+                                        IsVisible="False"/>
+
+                                <!-- Track info -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding DisplayName}"
+                                               FontSize="15"
+                                               FontWeight="SemiBold"
+                                               Foreground="#e8e8e8"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                        <TextBlock Text="{Binding DisplayArtist}"
+                                                   FontSize="13"
+                                                   Foreground="#888"/>
+                                        <TextBlock Text=" - "
+                                                   FontSize="13"
+                                                   Foreground="#666"/>
+                                        <TextBlock Text="{Binding DisplayAlbum}"
+                                                   FontSize="13"
+                                                   Foreground="#888"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Duration -->
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding DurationFormatted}"
+                                           VerticalAlignment="Center"
+                                           Foreground="#666"
+                                           FontSize="13"
+                                           Margin="16,0,0,0"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+
+        <!-- Now Playing Panel -->
+        <Border Grid.Row="2"
+                Background="#16213e"
+                CornerRadius="24,24,0,0"
+                Padding="32,24">
+            <Grid RowDefinitions="Auto,Auto,Auto">
+                <!-- Track Info -->
+                <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,20">
+                    <TextBlock Text="{Binding CurrentTrack.DisplayName, FallbackValue='Select a track to play'}"
+                               FontSize="20"
+                               FontWeight="Bold"
+                               Foreground="#e8e8e8"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding CurrentTrack.DisplayArtist, FallbackValue=''}"
+                               FontSize="14"
+                               Foreground="#888"
+                               HorizontalAlignment="Center"
+                               Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <!-- Progress Bar -->
+                <Grid Grid.Row="1" ColumnDefinitions="50,*,50" Margin="0,0,0,24">
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding CurrentTimeFormatted}"
+                               VerticalAlignment="Center"
+                               Foreground="#888"
+                               FontSize="12"/>
+                    <Slider Grid.Column="1"
+                            Minimum="0" Maximum="100"
+                            Value="{Binding Position}"
+                            Margin="16,0"
+                            PointerReleased="ProgressSlider_PointerReleased"/>
+                    <TextBlock Grid.Column="2"
+                               Text="{Binding TotalTimeFormatted}"
+                               VerticalAlignment="Center"
+                               Foreground="#888"
+                               FontSize="12"
+                               TextAlignment="Right"/>
+                </Grid>
+
+                <!-- Playback Controls -->
+                <Grid Grid.Row="2" ColumnDefinitions="*,Auto,*">
+                    <!-- Left: Shuffle & Repeat -->
+                    <StackPanel Grid.Column="0"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Spacing="12">
+                        <ToggleButton Classes="mode-btn"
+                                      IsChecked="{Binding ShuffleEnabled}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="Shuffle" FontSize="13"/>
+                            </StackPanel>
+                        </ToggleButton>
+                        <ToggleButton Classes="mode-btn"
+                                      IsChecked="{Binding RepeatEnabled}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="Repeat" FontSize="13"/>
+                            </StackPanel>
+                        </ToggleButton>
+                    </StackPanel>
+
+                    <!-- Center: Main Controls -->
+                    <StackPanel Grid.Column="1"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                Spacing="16">
+                        <Button Classes="control-btn"
+                                Command="{Binding PlayPreviousCommand}"
+                                Width="50" Height="50"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center">
+                            <TextBlock Text="&#9198;" FontSize="18"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
+                        <Button Classes="play-btn"
+                                Command="{Binding TogglePlayPauseCommand}"
+                                Width="70" Height="70"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center">
+                            <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="&#9654;" FontSize="26" IsVisible="{Binding !IsPlaying}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Margin="3,0,0,0"/>
+                                <TextBlock Text="&#9208;" FontSize="26" IsVisible="{Binding IsPlaying}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Panel>
+                        </Button>
+                        <Button Classes="control-btn"
+                                Command="{Binding PlayNextCommand}"
+                                Width="50" Height="50"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center">
+                            <TextBlock Text="&#9197;" FontSize="18"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Right: Volume -->
+                    <StackPanel Grid.Column="2"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Spacing="12">
+                        <TextBlock Text="Vol"
+                                   VerticalAlignment="Center"
+                                   Foreground="#888"
+                                   FontSize="13"/>
+                        <Slider Minimum="0" Maximum="100"
+                                Value="{Binding Volume}"
+                                Width="120"/>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
