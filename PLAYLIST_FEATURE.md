@@ -80,6 +80,23 @@ Currently, directories are added through the settings file. Here's how:
 
 Your custom playlist now appears in the Playlists panel on the right!
 
+### Adding Tracks to an Existing Playlist
+
+1. **Select tracks** by checking the boxes next to them
+2. Click the **"Add to Playlist"** button
+3. **Choose a playlist** from the dialog (only custom playlists shown)
+4. Click **Add**
+
+Tracks are added to the selected playlist (duplicates are automatically prevented).
+
+### Removing Tracks from a Custom Playlist
+
+1. **Click on a custom playlist** to view its tracks
+2. A **remove button (−)** appears next to each track
+3. **Click the − button** to remove that track from the playlist
+
+**Note**: The remove button only appears for custom playlists. You cannot remove tracks from directory playlists (they always show all tracks from that folder).
+
 ### Using Playlists
 
 - **Click any playlist** to view only its tracks
@@ -96,13 +113,13 @@ Your custom playlist now appears in the Playlists panel on the right!
 │                          │                          │
 │  Library (60%)           │  Playlists (40%)        │
 │                          │                          │
-│  ☐ Track 1               │  📁 Calm (15 tracks)    │
-│  ☐ Track 2               │  📁 Energetic (23 tracks)│
-│  ☐ Track 3               │  🎵 Favorites (12) ×    │
+│  ☐ Track 1          −    │  📁 Calm (15 tracks)    │
+│  ☐ Track 2          −    │  📁 Energetic (23 tracks)│
+│  ☐ Track 3          −    │  🎵 Favorites (12) ×    │
 │  ...                     │  🎵 Workout (8) ×       │
 │                          │                          │
-│  [Create Playlist]       │                          │
-│                          │                          │
+│  [Create] [Add to...]    │  (− button only shows   │
+│                          │   for custom playlists) │
 └──────────────────────────┴──────────────────────────┘
 │           Now Playing Controls                      │
 └─────────────────────────────────────────────────────┘

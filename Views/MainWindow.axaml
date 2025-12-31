@@ -227,7 +227,9 @@
                                             Margin="8,0,0,0"
                                             Click="RemoveFromPlaylist_Click"
                                             Tag="{Binding}"
-                                            IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).CanRemoveFromPlaylist}"/>
+                                            IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).CanRemoveFromPlaylist}"
+                                            HorizontalContentAlignment="Center"
+                                            VerticalContentAlignment="Center"/>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -276,7 +278,9 @@
                                                     Padding="0"
                                                     IsVisible="{Binding !IsDirectoryPlaylist}"
                                                     Click="DeletePlaylist_Click"
-                                                    Tag="{Binding}"/>
+                                                    Tag="{Binding}"
+                                                    HorizontalContentAlignment="Center"
+                                                    VerticalContentAlignment="Center"/>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
