@@ -183,6 +183,40 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void AddDirectories_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel) return;
+
+        var textBox = this.FindControl<TextBox>("DirectoriesTextBox");
+        if (textBox == null || string.IsNullOrWhiteSpace(textBox.Text)) return;
+
+        // Split by comma or newline
+        var paths = textBox.Text
+            .Split(new[] { ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(p => p.Trim())
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .ToList();
+
+        if (paths.Count == 0)
+        {
+            viewModel.StatusMessage = "No valid directories entered";
+            return;
+        }
+
+        // Add each directory
+        foreach (var path in paths)
+        {
+            viewModel.AddMusicDirectory(path);
+        }
+
+        // Refresh library
+        await viewModel.LoadLibraryCommand.ExecuteAsync(null);
+
+        // Clear the text box
+        textBox.Text = string.Empty;
+        viewModel.StatusMessage = $"Added {paths.Count} directory(ies)";
+    }
+
     private void OnClosed(object? sender, EventArgs e)
     {
         if (DataContext is IDisposable disposable)

@@ -25,6 +25,11 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private ObservableCollection<Track> _tracks = new();
 
+    private List<Track> _allTracks = new(); // Store all tracks for filtering
+
+    [ObservableProperty]
+    private string _searchText = string.Empty;
+
     [ObservableProperty]
     private ObservableCollection<Playlist> _playlists = new();
 
@@ -262,6 +267,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             }
 
             // Update tracks and playlists
+            _allTracks = allTracks; // Store all tracks for search/filtering
             Tracks = new ObservableCollection<Track>(allTracks);
             Playlists = new ObservableCollection<Playlist>(newPlaylists);
 
@@ -568,6 +574,50 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             Tracks.Remove(track);
             StatusMessage = $"Removed from '{SelectedPlaylist.Name}'";
         }
+    }
+
+    partial void OnSearchTextChanged(string value)
+    {
+        ApplySearch();
+    }
+
+    private void ApplySearch()
+    {
+        if (string.IsNullOrWhiteSpace(SearchText))
+        {
+            // No search - show current view (playlist or all tracks)
+            if (SelectedPlaylist != null)
+            {
+                Tracks = new ObservableCollection<Track>(SelectedPlaylist.Tracks);
+            }
+            else
+            {
+                Tracks = new ObservableCollection<Track>(_allTracks);
+            }
+        }
+        else
+        {
+            // Search through all tracks
+            var searchLower = SearchText.ToLower();
+            var filtered = _allTracks.Where(t =>
+                t.DisplayName.ToLower().Contains(searchLower) ||
+                t.DisplayArtist.ToLower().Contains(searchLower) ||
+                t.DisplayAlbum.ToLower().Contains(searchLower)
+            ).ToList();
+
+            Tracks = new ObservableCollection<Track>(filtered);
+            StatusMessage = $"Found {filtered.Count} track(s)";
+        }
+    }
+
+    [RelayCommand]
+    private void ShowAllSongs()
+    {
+        SelectedPlaylist = null;
+        CanRemoveFromPlaylist = false;
+        SearchText = string.Empty;
+        Tracks = new ObservableCollection<Track>(_allTracks);
+        StatusMessage = $"Showing all {_allTracks.Count} tracks";
     }
 
     private static string FormatTime(long milliseconds)
