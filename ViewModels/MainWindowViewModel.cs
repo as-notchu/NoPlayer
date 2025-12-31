@@ -26,6 +26,15 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private ObservableCollection<Track> _tracks = new();
 
     [ObservableProperty]
+    private ObservableCollection<Playlist> _playlists = new();
+
+    [ObservableProperty]
+    private Playlist? _selectedPlaylist;
+
+    [ObservableProperty]
+    private ObservableCollection<string> _musicDirectories = new();
+
+    [ObservableProperty]
     private Track? _currentTrack;
 
     [ObservableProperty]
@@ -74,6 +83,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         // Load settings
         var settings = _settingsService.Settings;
         MusicFolderPath = settings.MusicFolderPath;
+        MusicDirectories = new ObservableCollection<string>(settings.MusicDirectories);
         Volume = settings.Volume * 100;
         ShuffleEnabled = settings.ShuffleEnabled;
         RepeatEnabled = settings.RepeatEnabled;
@@ -199,17 +209,60 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private async Task LoadLibraryAsync()
     {
-        if (string.IsNullOrEmpty(MusicFolderPath))
-            return;
-
         IsLoading = true;
-        StatusMessage = "Scanning music folder...";
+        StatusMessage = "Scanning music folders...";
 
         try
         {
-            var tracks = await _libraryService.ScanFolderAsync(MusicFolderPath);
-            Tracks = new ObservableCollection<Track>(tracks);
-            StatusMessage = $"Loaded {Tracks.Count} tracks";
+            var allTracks = new List<Track>();
+            var newPlaylists = new List<Playlist>();
+
+            // Get all directories to scan (include single path and multiple directories)
+            var directoriesToScan = new List<string>();
+
+            if (!string.IsNullOrEmpty(MusicFolderPath) && System.IO.Directory.Exists(MusicFolderPath))
+            {
+                directoriesToScan.Add(MusicFolderPath);
+            }
+
+            foreach (var dir in MusicDirectories.Where(System.IO.Directory.Exists))
+            {
+                if (!directoriesToScan.Contains(dir))
+                {
+                    directoriesToScan.Add(dir);
+                }
+            }
+
+            // Scan each directory
+            foreach (var directory in directoriesToScan)
+            {
+                var tracks = await _libraryService.ScanFolderAsync(directory);
+                var dirName = System.IO.Path.GetFileName(directory.TrimEnd('/', '\\'));
+
+                // Mark tracks with their source directory
+                foreach (var track in tracks)
+                {
+                    track.SourceDirectory = directory;
+                }
+
+                // Create a playlist for this directory
+                var directoryPlaylist = new Playlist
+                {
+                    Name = dirName,
+                    IsDirectoryPlaylist = true,
+                    DirectoryPath = directory,
+                    Tracks = new ObservableCollection<Track>(tracks)
+                };
+
+                newPlaylists.Add(directoryPlaylist);
+                allTracks.AddRange(tracks);
+            }
+
+            // Update tracks and playlists
+            Tracks = new ObservableCollection<Track>(allTracks);
+            Playlists = new ObservableCollection<Playlist>(newPlaylists);
+
+            StatusMessage = $"Loaded {Tracks.Count} tracks from {directoriesToScan.Count} folder(s)";
         }
         catch (Exception ex)
         {
@@ -370,6 +423,84 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         MusicFolderPath = path;
         _settingsService.UpdateMusicFolder(path);
+    }
+
+    public void AddMusicDirectory(string path)
+    {
+        if (!string.IsNullOrEmpty(path) && System.IO.Directory.Exists(path) && !MusicDirectories.Contains(path))
+        {
+            MusicDirectories.Add(path);
+            _settingsService.UpdateMusicDirectories(MusicDirectories.ToList());
+        }
+    }
+
+    public void RemoveMusicDirectory(string path)
+    {
+        if (MusicDirectories.Remove(path))
+        {
+            _settingsService.UpdateMusicDirectories(MusicDirectories.ToList());
+        }
+    }
+
+    [RelayCommand]
+    private void CreatePlaylistFromSelected(string playlistName)
+    {
+        var selectedTracks = Tracks.Where(t => t.IsSelected).ToList();
+
+        if (selectedTracks.Count == 0)
+        {
+            StatusMessage = "No tracks selected";
+            return;
+        }
+
+        var newPlaylist = new Playlist
+        {
+            Name = playlistName,
+            IsDirectoryPlaylist = false,
+            Tracks = new ObservableCollection<Track>(selectedTracks)
+        };
+
+        Playlists.Add(newPlaylist);
+        StatusMessage = $"Created playlist '{playlistName}' with {selectedTracks.Count} tracks";
+
+        // Clear selection
+        foreach (var track in Tracks)
+        {
+            track.IsSelected = false;
+        }
+    }
+
+    [RelayCommand]
+    private void SelectPlaylist(Playlist? playlist)
+    {
+        SelectedPlaylist = playlist;
+
+        if (playlist != null)
+        {
+            // Update tracks view to show only tracks from this playlist
+            Tracks = new ObservableCollection<Track>(playlist.Tracks);
+            StatusMessage = $"Playlist: {playlist.Name} ({playlist.Tracks.Count} tracks)";
+        }
+        else
+        {
+            // Show all tracks
+            _ = LoadLibraryAsync();
+        }
+    }
+
+    [RelayCommand]
+    private void DeletePlaylist(Playlist? playlist)
+    {
+        if (playlist != null && !playlist.IsDirectoryPlaylist)
+        {
+            Playlists.Remove(playlist);
+            if (SelectedPlaylist == playlist)
+            {
+                SelectedPlaylist = null;
+                _ = LoadLibraryAsync();
+            }
+            StatusMessage = $"Deleted playlist '{playlist.Name}'";
+        }
     }
 
     private static string FormatTime(long milliseconds)

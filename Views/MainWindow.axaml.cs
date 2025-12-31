@@ -53,6 +53,67 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void CreatePlaylist_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel) return;
+
+        // Simple input dialog
+        var dialog = new Window
+        {
+            Title = "Create Playlist",
+            Width = 400,
+            Height = 150,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            CanResize = false
+        };
+
+        var textBox = new TextBox
+        {
+            Watermark = "Playlist name...",
+            Margin = new Avalonia.Thickness(20)
+        };
+
+        var createButton = new Button
+        {
+            Content = "Create",
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+            Margin = new Avalonia.Thickness(20, 0, 20, 20)
+        };
+
+        createButton.Click += (s, args) =>
+        {
+            if (!string.IsNullOrWhiteSpace(textBox.Text))
+            {
+                viewModel.CreatePlaylistFromSelectedCommand.Execute(textBox.Text);
+                dialog.Close();
+            }
+        };
+
+        var panel = new StackPanel();
+        panel.Children.Add(textBox);
+        panel.Children.Add(createButton);
+        dialog.Content = panel;
+
+        await dialog.ShowDialog(this);
+    }
+
+    private void Playlist_Clicked(object? sender, PointerPressedEventArgs e)
+    {
+        if (sender is Border border && border.DataContext is Models.Playlist playlist && DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.SelectPlaylistCommand.Execute(playlist);
+        }
+    }
+
+    private void DeletePlaylist_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Button button && button.Tag is Models.Playlist playlist && DataContext is MainWindowViewModel viewModel)
+        {
+            e.Handled = true; // Prevent triggering playlist selection
+            viewModel.DeletePlaylistCommand.Execute(playlist);
+        }
+    }
+
     private void OnClosed(object? sender, EventArgs e)
     {
         if (DataContext is IDisposable disposable)

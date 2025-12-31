@@ -72,4 +72,16 @@ public class SettingsService
         Settings.RepeatEnabled = enabled;
         Save();
     }
+
+    public void UpdateMusicDirectories(System.Collections.Generic.List<string> directories)
+    {
+        Settings.MusicDirectories = directories;
+        Save();
+    }
+
+    public void UpdateCustomPlaylists(System.Collections.Generic.List<SavedPlaylist> playlists)
+    {
+        Settings.CustomPlaylists = playlists;
+        Save();
+    }
 }

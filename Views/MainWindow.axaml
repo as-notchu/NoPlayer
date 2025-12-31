@@ -132,69 +132,143 @@
             </Grid>
         </Border>
 
-        <!-- Track List -->
-        <Border Grid.Row="1" Margin="20,16">
-            <Grid RowDefinitions="Auto,*">
-                <!-- Header -->
-                <TextBlock Grid.Row="0"
-                           Text="Library"
-                           FontSize="24"
-                           FontWeight="Bold"
-                           Foreground="#e8e8e8"
-                           Margin="0,0,0,16"/>
+        <!-- Main Content Area: Track List + Playlists -->
+        <Grid Grid.Row="1" Margin="20,16" ColumnDefinitions="60*,40*">
+            <!-- Track List -->
+            <Border Grid.Column="0" Margin="0,0,10,0">
+                <Grid RowDefinitions="Auto,Auto,*">
+                    <!-- Header -->
+                    <TextBlock Grid.Row="0"
+                               Text="Library"
+                               FontSize="24"
+                               FontWeight="Bold"
+                               Foreground="#e8e8e8"
+                               Margin="0,0,0,12"/>
 
-                <ListBox Grid.Row="1"
-                         x:Name="TrackList"
-                         ItemsSource="{Binding Tracks}"
-                         SelectedItem="{Binding CurrentTrack}"
-                         Background="Transparent"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                         DoubleTapped="TrackList_DoubleTapped">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate x:DataType="models:Track">
-                            <Grid ColumnDefinitions="Auto,*,Auto">
-                                <!-- Play indicator -->
-                                <Border Grid.Column="0"
-                                        Width="4" Height="40"
-                                        CornerRadius="2"
-                                        Background="#e94560"
-                                        Margin="0,0,16,0"
-                                        IsVisible="False"/>
+                    <!-- Selection Actions -->
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
+                        <Button Classes="secondary-btn"
+                                Content="Create Playlist"
+                                Click="CreatePlaylist_Click"
+                                FontSize="12"
+                                Padding="12,6"/>
+                        <TextBlock Text="{Binding StatusMessage}"
+                                   VerticalAlignment="Center"
+                                   Foreground="#888"
+                                   FontSize="12"
+                                   Margin="12,0,0,0"/>
+                    </StackPanel>
 
-                                <!-- Track info -->
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding DisplayName}"
-                                               FontSize="15"
-                                               FontWeight="SemiBold"
-                                               Foreground="#e8e8e8"
-                                               TextTrimming="CharacterEllipsis"/>
-                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                        <TextBlock Text="{Binding DisplayArtist}"
-                                                   FontSize="13"
-                                                   Foreground="#888"/>
-                                        <TextBlock Text=" - "
-                                                   FontSize="13"
-                                                   Foreground="#666"/>
-                                        <TextBlock Text="{Binding DisplayAlbum}"
-                                                   FontSize="13"
-                                                   Foreground="#888"
+                    <ListBox Grid.Row="2"
+                             x:Name="TrackList"
+                             ItemsSource="{Binding Tracks}"
+                             SelectedItem="{Binding CurrentTrack}"
+                             Background="Transparent"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             DoubleTapped="TrackList_DoubleTapped">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:Track">
+                                <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+                                    <!-- Selection Checkbox -->
+                                    <CheckBox Grid.Column="0"
+                                              IsChecked="{Binding IsSelected}"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,12,0"/>
+
+                                    <!-- Play indicator -->
+                                    <Border Grid.Column="1"
+                                            Width="4" Height="40"
+                                            CornerRadius="2"
+                                            Background="#e94560"
+                                            Margin="0,0,12,0"
+                                            IsVisible="False"/>
+
+                                    <!-- Track info -->
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding DisplayName}"
+                                                   FontSize="15"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#e8e8e8"
                                                    TextTrimming="CharacterEllipsis"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                            <TextBlock Text="{Binding DisplayArtist}"
+                                                       FontSize="13"
+                                                       Foreground="#888"/>
+                                            <TextBlock Text=" - "
+                                                       FontSize="13"
+                                                       Foreground="#666"/>
+                                            <TextBlock Text="{Binding DisplayAlbum}"
+                                                       FontSize="13"
+                                                       Foreground="#888"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
                                     </StackPanel>
-                                </StackPanel>
 
-                                <!-- Duration -->
-                                <TextBlock Grid.Column="2"
-                                           Text="{Binding DurationFormatted}"
-                                           VerticalAlignment="Center"
-                                           Foreground="#666"
-                                           FontSize="13"
-                                           Margin="16,0,0,0"/>
-                            </Grid>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </Grid>
-        </Border>
+                                    <!-- Duration -->
+                                    <TextBlock Grid.Column="3"
+                                               Text="{Binding DurationFormatted}"
+                                               VerticalAlignment="Center"
+                                               Foreground="#666"
+                                               FontSize="13"
+                                               Margin="16,0,0,0"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <!-- Playlists Panel -->
+            <Border Grid.Column="1" Background="#16213e" CornerRadius="12" Padding="16" Margin="10,0,0,0">
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Grid.Row="0"
+                               Text="Playlists"
+                               FontSize="20"
+                               FontWeight="Bold"
+                               Foreground="#e8e8e8"
+                               Margin="0,0,0,16"/>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Playlists}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:Playlist">
+                                    <Border Background="Transparent"
+                                            Padding="12,10"
+                                            Margin="0,0,0,8"
+                                            CornerRadius="8"
+                                            Cursor="Hand"
+                                            PointerPressed="Playlist_Clicked">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="{Binding Name}"
+                                                           FontSize="14"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="#e8e8e8"/>
+                                                <TextBlock FontSize="12"
+                                                           Foreground="#888"
+                                                           Margin="0,2,0,0">
+                                                    <Run Text="{Binding Tracks.Count}"/>
+                                                    <Run Text="tracks"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <Button Grid.Column="1"
+                                                    Content="×"
+                                                    Classes="control-btn"
+                                                    Width="24" Height="24"
+                                                    FontSize="16"
+                                                    Padding="0"
+                                                    IsVisible="{Binding !IsDirectoryPlaylist}"
+                                                    Click="DeletePlaylist_Click"
+                                                    Tag="{Binding}"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
 
         <!-- Now Playing Panel -->
         <Border Grid.Row="2"
