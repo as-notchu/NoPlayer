@@ -48,10 +48,10 @@
         <Style Selector="ToggleButton.mode-btn">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="#888"/>
-            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="CornerRadius" Value="12"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="#333"/>
-            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="Padding" Value="10,5"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
         <Style Selector="ToggleButton.mode-btn:checked">
@@ -302,7 +302,15 @@
                                                     <Run Text="{Binding Tracks.Count}"/>
                                                     <Run Text="tracks"/>
                                                 </TextBlock>
+                                                <!-- Show directory path for directory playlists -->
+                                                <TextBlock Text="{Binding DirectoryPath}"
+                                                           FontSize="10"
+                                                           Foreground="#666"
+                                                           Margin="0,2,0,0"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           IsVisible="{Binding IsDirectoryPlaylist}"/>
                                             </StackPanel>
+                                            <!-- Remove button for user playlists -->
                                             <Button Grid.Column="1"
                                                     Content="×"
                                                     Classes="control-btn"
@@ -311,6 +319,18 @@
                                                     Padding="0"
                                                     IsVisible="{Binding !IsDirectoryPlaylist}"
                                                     Click="DeletePlaylist_Click"
+                                                    Tag="{Binding}"
+                                                    HorizontalContentAlignment="Center"
+                                                    VerticalContentAlignment="Center"/>
+                                            <!-- Remove button for directory playlists (requires double tap) -->
+                                            <Button Grid.Column="1"
+                                                    Content="×"
+                                                    Classes="control-btn"
+                                                    Width="24" Height="24"
+                                                    FontSize="16"
+                                                    Padding="0"
+                                                    IsVisible="{Binding IsDirectoryPlaylist}"
+                                                    DoubleTapped="DeleteDirectoryPlaylist_DoubleTapped"
                                                     Tag="{Binding}"
                                                     HorizontalContentAlignment="Center"
                                                     VerticalContentAlignment="Center"/>
@@ -328,24 +348,24 @@
         <Border Grid.Row="2"
                 Background="#16213e"
                 CornerRadius="24,24,0,0"
-                Padding="32,24">
+                Padding="24,12">
             <Grid RowDefinitions="Auto,Auto,Auto">
                 <!-- Track Info -->
-                <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,20">
+                <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,8">
                     <TextBlock Text="{Binding CurrentTrack.DisplayName, FallbackValue='Select a track to play'}"
-                               FontSize="20"
+                               FontSize="16"
                                FontWeight="Bold"
                                Foreground="#e8e8e8"
                                HorizontalAlignment="Center"/>
                     <TextBlock Text="{Binding CurrentTrack.DisplayArtist, FallbackValue=''}"
-                               FontSize="14"
+                               FontSize="12"
                                Foreground="#888"
                                HorizontalAlignment="Center"
-                               Margin="0,4,0,0"/>
+                               Margin="0,2,0,0"/>
                 </StackPanel>
 
                 <!-- Progress Bar -->
-                <Grid Grid.Row="1" ColumnDefinitions="50,*,50" Margin="0,0,0,24">
+                <Grid Grid.Row="1" ColumnDefinitions="50,*,50" Margin="0,0,0,12">
                     <TextBlock Grid.Column="0"
                                Text="{Binding CurrentTimeFormatted}"
                                VerticalAlignment="Center"
@@ -371,17 +391,17 @@
                                 Orientation="Horizontal"
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Center"
-                                Spacing="12">
+                                Spacing="8">
                         <ToggleButton Classes="mode-btn"
                                       IsChecked="{Binding ShuffleEnabled}">
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <TextBlock Text="Shuffle" FontSize="13"/>
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="Shuffle" FontSize="11"/>
                             </StackPanel>
                         </ToggleButton>
                         <ToggleButton Classes="mode-btn"
                                       IsChecked="{Binding RepeatEnabled}">
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <TextBlock Text="Repeat" FontSize="13"/>
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="Repeat" FontSize="11"/>
                             </StackPanel>
                         </ToggleButton>
                     </StackPanel>
@@ -390,34 +410,34 @@
                     <StackPanel Grid.Column="1"
                                 Orientation="Horizontal"
                                 HorizontalAlignment="Center"
-                                Spacing="16">
+                                Spacing="12">
                         <Button Classes="control-btn"
                                 Command="{Binding PlayPreviousCommand}"
-                                Width="50" Height="50"
+                                Width="40" Height="40"
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center">
-                            <TextBlock Text="&#9198;" FontSize="18"
+                            <TextBlock Text="&#9198;" FontSize="16"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Button>
                         <Button Classes="play-btn"
                                 Command="{Binding TogglePlayPauseCommand}"
-                                Width="70" Height="70"
+                                Width="56" Height="56"
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center">
                             <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text="&#9654;" FontSize="26" IsVisible="{Binding !IsPlaying}"
+                                <TextBlock Text="&#9654;" FontSize="22" IsVisible="{Binding !IsPlaying}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"
                                            Margin="3,0,0,0"/>
-                                <TextBlock Text="&#9208;" FontSize="26" IsVisible="{Binding IsPlaying}"
+                                <TextBlock Text="&#9208;" FontSize="22" IsVisible="{Binding IsPlaying}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Panel>
                         </Button>
                         <Button Classes="control-btn"
                                 Command="{Binding PlayNextCommand}"
-                                Width="50" Height="50"
+                                Width="40" Height="40"
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center">
-                            <TextBlock Text="&#9197;" FontSize="18"
+                            <TextBlock Text="&#9197;" FontSize="16"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Button>
                     </StackPanel>

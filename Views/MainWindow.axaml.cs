@@ -115,6 +115,16 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void DeleteDirectoryPlaylist_DoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is Button button && button.Tag is Models.Playlist playlist && DataContext is MainWindowViewModel viewModel)
+        {
+            e.Handled = true; // Prevent triggering playlist selection
+            viewModel.RemoveDirectoryPlaylistCommand.Execute(playlist);
+            await viewModel.LoadLibraryCommand.ExecuteAsync(null);
+        }
+    }
+
     private async void AddToPlaylist_Click(object? sender, RoutedEventArgs e)
     {
         if (DataContext is not MainWindowViewModel viewModel) return;

@@ -266,9 +266,16 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
                 allTracks.AddRange(tracks);
             }
 
+            // Remove duplicates based on song metadata (title, artist, album, duration)
+            // This handles the case where the same song exists in multiple folders
+            var uniqueTracks = allTracks
+                .GroupBy(t => new { t.Title, t.Artist, t.Album, t.Duration })
+                .Select(g => g.First())
+                .ToList();
+
             // Update tracks and playlists
-            _allTracks = allTracks; // Store all tracks for search/filtering
-            Tracks = new ObservableCollection<Track>(allTracks);
+            _allTracks = uniqueTracks; // Store all tracks for search/filtering
+            Tracks = new ObservableCollection<Track>(uniqueTracks);
             Playlists = new ObservableCollection<Playlist>(newPlaylists);
 
             StatusMessage = $"Loaded {Tracks.Count} tracks from {directoriesToScan.Count} folder(s)";
@@ -513,6 +520,27 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
                 _ = LoadLibraryAsync();
             }
             StatusMessage = $"Deleted playlist '{playlist.Name}'";
+        }
+    }
+
+    [RelayCommand]
+    private void RemoveDirectoryPlaylist(Playlist? playlist)
+    {
+        if (playlist != null && playlist.IsDirectoryPlaylist && !string.IsNullOrEmpty(playlist.DirectoryPath))
+        {
+            // Remove from playlists
+            Playlists.Remove(playlist);
+
+            // Remove directory from MusicDirectories
+            RemoveMusicDirectory(playlist.DirectoryPath);
+
+            // If this was the selected playlist, clear selection
+            if (SelectedPlaylist == playlist)
+            {
+                SelectedPlaylist = null;
+            }
+
+            StatusMessage = $"Removed directory '{playlist.DirectoryPath}'";
         }
     }
 
