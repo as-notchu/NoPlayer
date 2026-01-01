@@ -11,6 +11,8 @@ This project is a music player that allows users to play and manage their music 
 - Play music files
 - Manage playlists
 - User-friendly interface
+## Release
+https://github.com/as-notchu/Music-Player/releases
 
 ## Installation
 
