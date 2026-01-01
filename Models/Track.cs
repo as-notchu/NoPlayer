@@ -1,8 +1,9 @@
 using System;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace MusicPlayer.Models;
 
-public class Track
+public partial class Track : ObservableObject
 {
     public string FilePath { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
@@ -11,6 +12,10 @@ public class Track
     public TimeSpan Duration { get; set; }
     public uint Year { get; set; }
     public string Genre { get; set; } = string.Empty;
+    public string? SourceDirectory { get; set; } // Track which directory this track came from
+
+    [ObservableProperty]
+    private bool _isSelected;
 
     public string DisplayName => string.IsNullOrEmpty(Title)
         ? System.IO.Path.GetFileNameWithoutExtension(FilePath)
