@@ -17,12 +17,12 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-APP_NAME="MusicPlayer"
+APP_NAME="NoPlayer"
 APP_BUNDLE="${APP_NAME}.app"
 VERSION="$1"
 DMG_NAME="${APP_NAME}-${VERSION}-macOS"
 BUILD_DIR="bin/Release/net10.0/osx-arm64/publish"
-IDENTIFIER="com.musicplayer.app"
+IDENTIFIER="com.noplayer.app"
 TEMP_DMG="temp.dmg"
 ICON_FILE="Assets/ic.icns"
 
@@ -73,7 +73,7 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
     <key>CFBundleDisplayName</key>
     <string>${APP_NAME}</string>
     <key>CFBundleExecutable</key>
-    <string>MusicPlayer</string>
+    <string>NoPlayer</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
@@ -99,7 +99,7 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
 EOF
 
 # Make the executable... executable
-chmod +x "$APP_BUNDLE/Contents/MacOS/MusicPlayer"
+chmod +x "$APP_BUNDLE/Contents/MacOS/NoPlayer"
 
 echo "💿 Creating DMG installer..."
 

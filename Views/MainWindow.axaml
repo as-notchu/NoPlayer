@@ -8,7 +8,7 @@
         x:Class="MusicPlayer.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Music Player"
+        Title="NoPlayer"
         Width="1000" Height="700"
         MinWidth="800" MinHeight="500"
         Background="#1a1a2e">
@@ -203,7 +203,7 @@
                              SelectedItem="{Binding CurrentTrack}"
                              Background="Transparent"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                             DoubleTapped="TrackList_DoubleTapped">
+                             SelectionChanged="TrackList_SelectionChanged">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="models:Track">
                                 <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
