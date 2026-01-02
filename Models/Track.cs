@@ -17,13 +17,90 @@ public partial class Track : ObservableObject
     [ObservableProperty]
     private bool _isSelected;
 
-    public string DisplayName => string.IsNullOrEmpty(Title)
-        ? System.IO.Path.GetFileNameWithoutExtension(FilePath)
-        : Title;
+    // Cache display properties to avoid recomputation
+    private string? _displayName;
+    private string? _displayArtist;
+    private string? _displayAlbum;
 
-    public string DisplayArtist => string.IsNullOrEmpty(Artist) ? "Unknown Artist" : Artist;
+    // Cache lowercase versions for efficient searching
+    private string? _displayNameLower;
+    private string? _displayArtistLower;
+    private string? _displayAlbumLower;
 
-    public string DisplayAlbum => string.IsNullOrEmpty(Album) ? "Unknown Album" : Album;
+    public string DisplayName
+    {
+        get
+        {
+            if (_displayName == null)
+            {
+                _displayName = string.IsNullOrEmpty(Title)
+                    ? System.IO.Path.GetFileNameWithoutExtension(FilePath)
+                    : Title;
+            }
+            return _displayName;
+        }
+    }
+
+    public string DisplayArtist
+    {
+        get
+        {
+            if (_displayArtist == null)
+            {
+                _displayArtist = string.IsNullOrEmpty(Artist) ? "Unknown Artist" : Artist;
+            }
+            return _displayArtist;
+        }
+    }
+
+    public string DisplayAlbum
+    {
+        get
+        {
+            if (_displayAlbum == null)
+            {
+                _displayAlbum = string.IsNullOrEmpty(Album) ? "Unknown Album" : Album;
+            }
+            return _displayAlbum;
+        }
+    }
+
+    // Lowercase versions for efficient searching without repeated allocations
+    public string DisplayNameLower
+    {
+        get
+        {
+            if (_displayNameLower == null)
+            {
+                _displayNameLower = DisplayName.ToLower();
+            }
+            return _displayNameLower;
+        }
+    }
+
+    public string DisplayArtistLower
+    {
+        get
+        {
+            if (_displayArtistLower == null)
+            {
+                _displayArtistLower = DisplayArtist.ToLower();
+            }
+            return _displayArtistLower;
+        }
+    }
+
+    public string DisplayAlbumLower
+    {
+        get
+        {
+            if (_displayAlbumLower == null)
+            {
+                _displayAlbumLower = DisplayAlbum.ToLower();
+            }
+            return _displayAlbumLower;
+        }
+    }
 
     public string DurationFormatted => Duration.TotalHours >= 1
         ? Duration.ToString(@"h\:mm\:ss")
