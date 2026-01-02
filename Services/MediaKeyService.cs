@@ -352,7 +352,7 @@ public class MediaKeyService : IDisposable
             Console.WriteLine("Remote Command Center initialized");
 
             // Set initial now playing info
-            UpdateNowPlayingInfo("Music Player", "Unknown", 0, 0);
+            UpdateNowPlayingInfo("NoPlayer", "Unknown", 0, 0);
             UpdatePlaybackState(false);
         }
         catch (Exception ex)
