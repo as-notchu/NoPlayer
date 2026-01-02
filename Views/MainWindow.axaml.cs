@@ -46,7 +46,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void TrackList_DoubleTapped(object? sender, TappedEventArgs e)
+    private void TrackList_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (sender is ListBox listBox && listBox.SelectedItem is Models.Track track && DataContext is MainWindowViewModel viewModel)
         {

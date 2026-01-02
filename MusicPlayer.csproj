@@ -5,15 +5,20 @@
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <AssemblyName>NoPlayer</AssemblyName>
 
     <!-- Publishing settings -->
-    <ApplicationName>MusicPlayer</ApplicationName>
+    <ApplicationName>NoPlayer</ApplicationName>
     <Version>1.0.0</Version>
-    <Authors>MusicPlayer</Authors>
-    <Company>MusicPlayer</Company>
-    <Product>MusicPlayer</Product>
+    <Authors>NoPlayer</Authors>
+    <Company>NoPlayer</Company>
+    <Product>NoPlayer</Product>
     <Copyright>Copyright © 2025</Copyright>
-    <ApplicationIcon Condition="$([MSBuild]::IsOSPlatform('Windows'))">Assets/ic.icns</ApplicationIcon>
+  </PropertyGroup>
+
+  <!-- Set Windows icon for Windows builds only -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+    <ApplicationIcon>Assets/icon2.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,9 +44,17 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
-  <!-- Native BASS libraries for macOS -->
-  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+  <!-- Native BASS libraries - based on target runtime, not build OS -->
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-arm64'">
     <None Include="runtimes/osx-x64/native/*.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>%(Filename)%(Extension)</Link>
+    </None>
+  </ItemGroup>
+
+  <!-- Native BASS libraries for Windows -->
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+    <None Include="runtimes/win-x64/native/*.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(Filename)%(Extension)</Link>
     </None>

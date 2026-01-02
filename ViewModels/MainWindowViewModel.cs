@@ -18,7 +18,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly SettingsService _settingsService;
     private readonly MediaKeyService _mediaKeyService;
     private readonly Random _random = new();
-    private readonly List<int> _shuffleHistory = new();
+    private readonly List<int> _shuffleHistory = new(50); // Pre-allocate for 50 items
+    private const int MaxShuffleHistory = 50; // Fixed max size to prevent unbounded growth
     private int _shuffleHistoryIndex = -1;
     private bool _disposed;
 
@@ -262,6 +263,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
                     Tracks = new ObservableCollection<Track>(tracks)
                 };
 
+                // Rebuild the HashSet index for efficient lookups
+                directoryPlaylist.RebuildTrackIndex();
+
                 newPlaylists.Add(directoryPlaylist);
                 allTracks.AddRange(tracks);
             }
@@ -275,7 +279,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
             // Update tracks and playlists
             _allTracks = uniqueTracks; // Store all tracks for search/filtering
-            Tracks = new ObservableCollection<Track>(uniqueTracks);
+            UpdateTracksCollection(uniqueTracks);
             Playlists = new ObservableCollection<Playlist>(newPlaylists);
 
             StatusMessage = $"Loaded {Tracks.Count} tracks from {directoriesToScan.Count} folder(s)";
@@ -352,14 +356,16 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
                     availableIndices = Enumerable.Range(0, Tracks.Count).ToList();
 
                 nextIndex = availableIndices[_random.Next(availableIndices.Count)];
+
+                // Maintain fixed-size history: remove oldest when at capacity
+                if (_shuffleHistory.Count >= MaxShuffleHistory)
+                {
+                    _shuffleHistory.RemoveAt(0);
+                    _shuffleHistoryIndex--;
+                }
+
                 _shuffleHistory.Add(nextIndex);
                 _shuffleHistoryIndex = _shuffleHistory.Count - 1;
-
-                if (_shuffleHistory.Count > 100)
-                {
-                    _shuffleHistory.RemoveRange(0, 50);
-                    _shuffleHistoryIndex -= 50;
-                }
             }
         }
         else
@@ -476,6 +482,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             Tracks = new ObservableCollection<Track>(selectedTracks)
         };
 
+        // Rebuild the HashSet index for efficient lookups
+        newPlaylist.RebuildTrackIndex();
+
         Playlists.Add(newPlaylist);
         StatusMessage = $"Created playlist '{playlistName}' with {selectedTracks.Count} tracks";
 
@@ -494,7 +503,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         if (playlist != null)
         {
             // Update tracks view to show only tracks from this playlist
-            Tracks = new ObservableCollection<Track>(playlist.Tracks);
+            UpdateTracksCollection(playlist.Tracks);
             StatusMessage = $"Playlist: {playlist.Name} ({playlist.Tracks.Count} tracks)";
 
             // Can only remove from custom playlists
@@ -564,10 +573,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         var addedCount = 0;
         foreach (var track in selectedTracks)
         {
-            // Don't add duplicates
-            if (!targetPlaylist.Tracks.Any(t => t.FilePath == track.FilePath))
+            // Use efficient O(1) AddTrack method instead of O(n) .Any() check
+            if (targetPlaylist.AddTrack(track))
             {
-                targetPlaylist.Tracks.Add(track);
                 addedCount++;
             }
         }
@@ -596,7 +604,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        if (SelectedPlaylist.Tracks.Remove(track))
+        // Use efficient RemoveTrack method that maintains the HashSet
+        if (SelectedPlaylist.RemoveTrack(track))
         {
             // Also remove from the current view
             Tracks.Remove(track);
@@ -616,25 +625,37 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             // No search - show current view (playlist or all tracks)
             if (SelectedPlaylist != null)
             {
-                Tracks = new ObservableCollection<Track>(SelectedPlaylist.Tracks);
+                UpdateTracksCollection(SelectedPlaylist.Tracks);
             }
             else
             {
-                Tracks = new ObservableCollection<Track>(_allTracks);
+                UpdateTracksCollection(_allTracks);
             }
         }
         else
         {
-            // Search through all tracks
+            // Search through all tracks using cached lowercase properties
             var searchLower = SearchText.ToLower();
             var filtered = _allTracks.Where(t =>
-                t.DisplayName.ToLower().Contains(searchLower) ||
-                t.DisplayArtist.ToLower().Contains(searchLower) ||
-                t.DisplayAlbum.ToLower().Contains(searchLower)
+                t.DisplayNameLower.Contains(searchLower) ||
+                t.DisplayArtistLower.Contains(searchLower) ||
+                t.DisplayAlbumLower.Contains(searchLower)
             ).ToList();
 
-            Tracks = new ObservableCollection<Track>(filtered);
+            UpdateTracksCollection(filtered);
             StatusMessage = $"Found {filtered.Count} track(s)";
+        }
+    }
+
+    // Helper method to update the Tracks collection efficiently
+    // Modifies the existing collection instead of creating a new one
+    private void UpdateTracksCollection(IEnumerable<Track> newTracks)
+    {
+        // Clear and re-add is more memory efficient than creating new ObservableCollection
+        Tracks.Clear();
+        foreach (var track in newTracks)
+        {
+            Tracks.Add(track);
         }
     }
 
@@ -644,7 +665,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         SelectedPlaylist = null;
         CanRemoveFromPlaylist = false;
         SearchText = string.Empty;
-        Tracks = new ObservableCollection<Track>(_allTracks);
+        UpdateTracksCollection(_allTracks);
         StatusMessage = $"Showing all {_allTracks.Count} tracks";
     }
 

@@ -75,9 +75,17 @@ public class AudioPlayerService : IDisposable
             }
         }
 
-        // Load plugins for additional format support
-        LoadPlugin(baseDir, "libbassflac.dylib");
-        LoadPlugin(baseDir, "libbasswebm.dylib");
+        // Load plugins for additional format support (platform-specific)
+        if (OperatingSystem.IsWindows())
+        {
+            LoadPlugin(baseDir, "bassflac.dll");
+            LoadPlugin(baseDir, "basswebm.dll");
+        }
+        else if (OperatingSystem.IsMacOS())
+        {
+            LoadPlugin(baseDir, "libbassflac.dylib");
+            LoadPlugin(baseDir, "libbasswebm.dylib");
+        }
 
         _bassInitialized = true;
     }
