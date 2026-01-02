@@ -1,4 +1,16 @@
 obj/
-runtimes/
 bin/
 .claude/
+
+# Allow native libraries for distribution
+!runtimes/
+!runtimes/*/
+!runtimes/*/*/
+!runtimes/*/*/*
+runtimes/*
+!runtimes/osx-x64/
+!runtimes/osx-x64/native/
+!runtimes/osx-x64/native/*.dylib
+!runtimes/win-x64/
+!runtimes/win-x64/native/
+!runtimes/win-x64/native/*.dll

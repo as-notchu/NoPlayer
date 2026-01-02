@@ -39,9 +39,17 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
-  <!-- Native BASS libraries for macOS -->
-  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+  <!-- Native BASS libraries - based on target runtime, not build OS -->
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-arm64'">
     <None Include="runtimes/osx-x64/native/*.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>%(Filename)%(Extension)</Link>
+    </None>
+  </ItemGroup>
+
+  <!-- Native BASS libraries for Windows -->
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+    <None Include="runtimes/win-x64/native/*.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(Filename)%(Extension)</Link>
     </None>
