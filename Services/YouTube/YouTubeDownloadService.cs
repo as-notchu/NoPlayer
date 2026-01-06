@@ -100,7 +100,7 @@ public class YouTubeDownloadService
                 }
             }
 
-            OnProgressChanged(new DownloadProgressEventArgs($"All downloads completed! {videos.Count} songs downloaded to '{playlistDirName}'", videos.Count, videos.Count, null));
+            OnProgressChanged(new DownloadProgressEventArgs($"All downloads completed! {videos.Count} songs downloaded to '{playlistOutputDirectory}'", videos.Count, videos.Count, null, playlistOutputDirectory));
         }
         catch (Exception ex)
         {
@@ -165,13 +165,15 @@ public class DownloadProgressEventArgs : EventArgs
     public int CurrentIndex { get; }
     public int TotalCount { get; }
     public string? CurrentVideoTitle { get; }
+    public string? OutputPath { get; }
 
-    public DownloadProgressEventArgs(string message, int currentIndex, int totalCount, string? currentVideoTitle)
+    public DownloadProgressEventArgs(string message, int currentIndex, int totalCount, string? currentVideoTitle, string? outputPath = null)
     {
         Message = message;
         CurrentIndex = currentIndex;
         TotalCount = totalCount;
         CurrentVideoTitle = currentVideoTitle;
+        OutputPath = outputPath;
     }
 }
 

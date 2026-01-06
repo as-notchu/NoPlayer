@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -43,6 +44,9 @@ public partial class DownloadWindowViewModel : ViewModelBase, IDisposable
 
     [ObservableProperty]
     private ObservableCollection<string> _downloadLog = new();
+
+    [ObservableProperty]
+    private string _completedOutputDirectory = string.Empty;
 
     public DownloadWindowViewModel()
     {
@@ -88,6 +92,7 @@ public partial class DownloadWindowViewModel : ViewModelBase, IDisposable
             CurrentProgress = 0;
             TotalVideos = 0;
             CurrentVideoTitle = string.Empty;
+            CompletedOutputDirectory = string.Empty;
             DownloadLog.Clear();
 
             _cancellationTokenSource = new CancellationTokenSource();
@@ -131,6 +136,24 @@ public partial class DownloadWindowViewModel : ViewModelBase, IDisposable
         CurrentProgress = 0;
         TotalVideos = 0;
         CurrentVideoTitle = string.Empty;
+        CompletedOutputDirectory = string.Empty;
+    }
+
+    [RelayCommand]
+    private async Task CopyOutputPathAsync()
+    {
+        if (!string.IsNullOrEmpty(CompletedOutputDirectory))
+        {
+            var clipboard = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                ? desktop.MainWindow?.Clipboard ?? TopLevel.GetTopLevel(desktop.MainWindow)?.Clipboard
+                : null;
+            
+            if (clipboard != null)
+            {
+                await clipboard.SetTextAsync(CompletedOutputDirectory);
+                AddLog($"Copied to clipboard: {CompletedOutputDirectory}");
+            }
+        }
     }
 
     private void OnDownloadProgressChanged(object? sender, DownloadProgressEventArgs e)
@@ -142,6 +165,11 @@ public partial class DownloadWindowViewModel : ViewModelBase, IDisposable
             TotalVideos = e.TotalCount;
             CurrentVideoTitle = e.CurrentVideoTitle ?? string.Empty;
 
+            if (!string.IsNullOrEmpty(e.OutputPath))
+            {
+                CompletedOutputDirectory = e.OutputPath;
+            }
+
             if (!string.IsNullOrEmpty(e.Message))
             {
                 AddLog(e.Message);
@@ -151,6 +179,7 @@ public partial class DownloadWindowViewModel : ViewModelBase, IDisposable
 
     private void OnDownloadCompleted(object? sender, DownloadCompletedEventArgs e)
     {
+        
         Dispatcher.UIThread.Post(() =>
         {
             AddLog($"✓ Completed: {e.VideoTitle} ({e.CompletedCount}/{e.TotalCount})");

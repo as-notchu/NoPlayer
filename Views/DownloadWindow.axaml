@@ -222,7 +222,7 @@
         </Border>
 
         <!-- Action Buttons -->
-        <Grid Grid.Row="5" ColumnDefinitions="*,Auto,Auto">
+        <Grid Grid.Row="5" ColumnDefinitions="*,Auto,Auto,Auto">
             <StackPanel Grid.Column="0"
                         Orientation="Horizontal"
                         VerticalAlignment="Center">
@@ -233,13 +233,20 @@
             </StackPanel>
 
             <Button Grid.Column="1"
+                    Classes="secondary-btn"
+                    Content="Copy Path"
+                    Command="{Binding CopyOutputPathCommand}"
+                    IsVisible="{Binding CompletedOutputDirectory, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                    Margin="0,0,12,0"/>
+
+            <Button Grid.Column="2"
                     Classes="cancel-btn"
                     Content="Cancel"
                     Command="{Binding CancelDownloadCommand}"
                     IsEnabled="{Binding IsDownloading}"
                     Margin="0,0,12,0"/>
 
-            <Button Grid.Column="2"
+            <Button Grid.Column="3"
                     Classes="primary-btn"
                     Content="Start Download"
                     Command="{Binding StartDownloadCommand}"
