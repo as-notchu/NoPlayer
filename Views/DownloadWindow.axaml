@@ -6,7 +6,7 @@
         mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="650"
         x:Class="MusicPlayer.Views.DownloadWindow"
         x:DataType="vm:DownloadWindowViewModel"
-        Title="YouTube Downloader"
+        Title="YouTube Playlist Downloader"
         Width="700" Height="650"
         MinWidth="600" MinHeight="500"
         Background="#1a1a2e"
@@ -83,7 +83,7 @@
     <Grid Margin="24" RowDefinitions="Auto,Auto,Auto,Auto,*,Auto">
         <!-- Header -->
         <TextBlock Grid.Row="0"
-                   Text="YouTube Downloader"
+                   Text="YouTube Playlist Downloader"
                    FontSize="24"
                    FontWeight="Bold"
                    Foreground="#e8e8e8"
@@ -91,20 +91,25 @@
 
         <!-- YouTube URL Input -->
         <StackPanel Grid.Row="1" Margin="0,0,0,16">
-            <TextBlock Text="YouTube URL (Video or Playlist)"
+            <TextBlock Text="YouTube Playlist URL"
                        Foreground="#e8e8e8"
                        FontSize="13"
                        FontWeight="SemiBold"
                        Margin="0,0,0,8"/>
             <TextBox Classes="input-box"
                      Text="{Binding YoutubeUrl}"
-                     Watermark="https://www.youtube.com/watch?v=... or playlist URL"
+                     Watermark="https://www.youtube.com/playlist?list=... (Playlist URLs only)"
                      IsEnabled="{Binding !IsDownloading}"/>
+            <TextBlock Text="Note: Only playlist downloads are supported. Each playlist will be saved in its own folder."
+                       Foreground="#888"
+                       FontSize="11"
+                       Margin="0,6,0,0"
+                       TextWrapping="Wrap"/>
         </StackPanel>
 
         <!-- Output Directory -->
         <StackPanel Grid.Row="2" Margin="0,0,0,16">
-            <TextBlock Text="Output Directory"
+            <TextBlock Text="Base Output Directory"
                        Foreground="#e8e8e8"
                        FontSize="13"
                        FontWeight="SemiBold"
@@ -121,6 +126,10 @@
                         Click="BrowseOutput_Click"
                         IsEnabled="{Binding !IsDownloading}"/>
             </Grid>
+            <TextBlock Text="A subfolder will be created for each playlist"
+                       Foreground="#666"
+                       FontSize="11"
+                       Margin="0,6,0,0"/>
         </StackPanel>
 
         <!-- Progress Info -->
@@ -217,7 +226,7 @@
             <StackPanel Grid.Column="0"
                         Orientation="Horizontal"
                         VerticalAlignment="Center">
-                <TextBlock Text="Downloads will have a 10-second delay between each song"
+                <TextBlock Text="WebM format • 10-second delay between songs"
                            Foreground="#666"
                            FontSize="11"
                            VerticalAlignment="Center"/>

@@ -61,13 +61,21 @@ public partial class DownloadWindowViewModel : ViewModelBase, IDisposable
     {
         if (string.IsNullOrWhiteSpace(YoutubeUrl))
         {
-            StatusMessage = "Please enter a YouTube URL";
+            StatusMessage = "Please enter a YouTube playlist URL";
             return;
         }
 
         if (string.IsNullOrWhiteSpace(OutputDirectory))
         {
             StatusMessage = "Please select an output directory";
+            return;
+        }
+
+        // Validate that it's a playlist URL
+        if (!YoutubeUrl.Contains("playlist") && !YoutubeUrl.Contains("list="))
+        {
+            StatusMessage = "Please provide a valid YouTube playlist URL (must contain 'playlist' or 'list=')";
+            AddLog("ERROR: Only playlist URLs are supported. Single video downloads are not allowed.");
             return;
         }
 
@@ -82,18 +90,11 @@ public partial class DownloadWindowViewModel : ViewModelBase, IDisposable
 
             _cancellationTokenSource = new CancellationTokenSource();
 
-            AddLog($"Starting download from: {YoutubeUrl}");
-            AddLog($"Output directory: {OutputDirectory}");
+            AddLog($"Starting playlist download from: {YoutubeUrl}");
+            AddLog($"Base output directory: {OutputDirectory}");
+            AddLog("A subdirectory will be created for this playlist");
 
-            // Determine if it's a playlist or single video
-            if (YoutubeUrl.Contains("playlist") || YoutubeUrl.Contains("list="))
-            {
-                await _downloadService.DownloadPlaylistAsync(YoutubeUrl, OutputDirectory, _cancellationTokenSource.Token);
-            }
-            else
-            {
-                await _downloadService.DownloadSingleVideoAsync(YoutubeUrl, OutputDirectory, _cancellationTokenSource.Token);
-            }
+            await _downloadService.DownloadPlaylistAsync(YoutubeUrl, OutputDirectory, _cancellationTokenSource.Token);
         }
         catch (Exception ex)
         {

@@ -26,24 +26,31 @@ public class YouTubeDownloadService
         _youtube = new YoutubeClient();
     }
 
-    public async Task DownloadPlaylistAsync(string playlistUrl, string outputDirectory, CancellationToken cancellationToken = default)
+    public async Task DownloadPlaylistAsync(string playlistUrl, string baseOutputDirectory, CancellationToken cancellationToken = default)
     {
         try
         {
-            // Ensure output directory exists
-            Directory.CreateDirectory(outputDirectory);
+            // Ensure base output directory exists
+            Directory.CreateDirectory(baseOutputDirectory);
 
             // Extract playlist ID
             var playlistId = PlaylistId.TryParse(playlistUrl);
             if (playlistId == null)
             {
-                OnDownloadError(new DownloadErrorEventArgs("Invalid playlist URL", null));
+                OnDownloadError(new DownloadErrorEventArgs("Invalid playlist URL. Please provide a valid YouTube playlist URL.", null));
                 return;
             }
 
             // Get playlist metadata
             OnProgressChanged(new DownloadProgressEventArgs("Fetching playlist information...", 0, 0, null));
             var playlist = await _youtube.Playlists.GetAsync(playlistId.Value, cancellationToken);
+
+            // Create a subdirectory for this playlist
+            var playlistDirName = SanitizeFileName(playlist.Title);
+            var playlistOutputDirectory = Path.Combine(baseOutputDirectory, playlistDirName);
+            Directory.CreateDirectory(playlistOutputDirectory);
+
+            OnProgressChanged(new DownloadProgressEventArgs($"Created directory: {playlistDirName}", 0, 0, null));
 
             // Get all videos in the playlist
             var videos = await _youtube.Playlists.GetVideosAsync(playlistId.Value, cancellationToken).CollectAsync();
@@ -54,9 +61,9 @@ public class YouTubeDownloadService
                 return;
             }
 
-            OnProgressChanged(new DownloadProgressEventArgs($"Found {videos.Count} videos in playlist: {playlist.Title}", 0, videos.Count, null));
+            OnProgressChanged(new DownloadProgressEventArgs($"Found {videos.Count} songs in playlist: {playlist.Title}", 0, videos.Count, null));
 
-            // Download each video
+            // Download each video to the playlist directory
             for (int i = 0; i < videos.Count; i++)
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -71,7 +78,7 @@ public class YouTubeDownloadService
                         videos.Count,
                         video.Title));
 
-                    await DownloadVideoAsync(video, outputDirectory, cancellationToken);
+                    await DownloadVideoAsync(video, playlistOutputDirectory, cancellationToken);
 
                     OnDownloadCompleted(new DownloadCompletedEventArgs(video.Title, i + 1, videos.Count));
 
@@ -93,7 +100,7 @@ public class YouTubeDownloadService
                 }
             }
 
-            OnProgressChanged(new DownloadProgressEventArgs($"All downloads completed! {videos.Count} videos downloaded.", videos.Count, videos.Count, null));
+            OnProgressChanged(new DownloadProgressEventArgs($"All downloads completed! {videos.Count} songs downloaded to '{playlistDirName}'", videos.Count, videos.Count, null));
         }
         catch (Exception ex)
         {
@@ -101,52 +108,24 @@ public class YouTubeDownloadService
         }
     }
 
-    public async Task DownloadSingleVideoAsync(string videoUrl, string outputDirectory, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            Directory.CreateDirectory(outputDirectory);
-
-            var videoId = VideoId.TryParse(videoUrl);
-            if (videoId == null)
-            {
-                OnDownloadError(new DownloadErrorEventArgs("Invalid video URL", null));
-                return;
-            }
-
-            OnProgressChanged(new DownloadProgressEventArgs("Fetching video information...", 0, 1, null));
-            var video = await _youtube.Videos.GetAsync(videoId.Value, cancellationToken);
-
-            OnProgressChanged(new DownloadProgressEventArgs($"Downloading: {video.Title}", 0, 1, video.Title));
-            await DownloadVideoAsync(video, outputDirectory, cancellationToken);
-
-            OnDownloadCompleted(new DownloadCompletedEventArgs(video.Title, 1, 1));
-            OnProgressChanged(new DownloadProgressEventArgs("Download completed!", 1, 1, null));
-        }
-        catch (Exception ex)
-        {
-            OnDownloadError(new DownloadErrorEventArgs($"Video download failed: {ex.Message}", null));
-        }
-    }
-
     private async Task DownloadVideoAsync(IVideo video, string outputDirectory, CancellationToken cancellationToken)
     {
         var streamManifest = await _youtube.Videos.Streams.GetManifestAsync(video.Id, cancellationToken);
 
-        // Get the best audio-only stream
+        // Get the best WebM audio-only stream
         var audioStreamInfo = streamManifest.GetAudioOnlyStreams()
-            .Where(s => s.Container == Container.Mp4 || s.Container == Container.WebM)
+            .Where(s => s.Container == Container.WebM)
             .OrderByDescending(s => s.Bitrate)
             .FirstOrDefault();
 
         if (audioStreamInfo == null)
         {
-            throw new Exception("No audio stream found for this video");
+            throw new Exception("No WebM audio stream found for this video");
         }
 
         // Sanitize filename
         var fileName = SanitizeFileName(video.Title);
-        var filePath = Path.Combine(outputDirectory, $"{fileName}.{audioStreamInfo.Container}");
+        var filePath = Path.Combine(outputDirectory, $"{fileName}.webm");
 
         // Download the stream
         await _youtube.Videos.Streams.DownloadAsync(audioStreamInfo, filePath, cancellationToken: cancellationToken);
