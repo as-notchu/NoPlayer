@@ -109,8 +109,6 @@ Create distributable packages:
 .\publish-windows.ps1 1.0.0
 ```
 
-See [PUBLISHING.md](PUBLISHING.md) for detailed instructions.
-
 ---
 
 ## 🤝 Contributing
