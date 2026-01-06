@@ -18,8 +18,8 @@ A modern, cross-platform music player built with .NET and Avalonia.
 
 ---
 ## Screenshots
-<img width="1280" height="945" alt="image" src="https://github.com/user-attachments/assets/c5bf6a89-4a39-4fb6-9a04-46a42abcb17e" />
-<img width="1280" height="1215" alt="image" src="https://github.com/user-attachments/assets/aa56fd08-5e68-4d35-8019-da8a81870ce8" />
+<img width="600" height="490" alt="image" src="https://github.com/user-attachments/assets/c5bf6a89-4a39-4fb6-9a04-46a42abcb17e" />
+<img width="600" height="600" alt="image" src="https://github.com/user-attachments/assets/aa56fd08-5e68-4d35-8019-da8a81870ce8" />
 
 
 ## 📥 Installation
