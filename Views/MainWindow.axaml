@@ -114,7 +114,7 @@
         <Border Grid.Row="0" Background="#16213e" Padding="20,16" CornerRadius="0,0,16,16">
             <Grid RowDefinitions="Auto,Auto">
                 <!-- First Row: Folder Path -->
-                <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,12">
+                <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,0,0,12">
                     <TextBox Grid.Column="0"
                              Classes="folder-input"
                              Text="{Binding MusicFolderPath}"
@@ -131,6 +131,12 @@
                             Margin="8,0,0,0"
                             Command="{Binding LoadLibraryCommand}"
                             IsEnabled="{Binding !IsLoading}"/>
+                    <Button Grid.Column="3"
+                            Classes="secondary-btn"
+                            Content="⬇ Download from YouTube"
+                            Margin="8,0,0,0"
+                            Click="OpenDownloadWindow_Click"
+                            ToolTip.Tip="Download music from YouTube playlists"/>
                 </Grid>
 
                 <!-- Second Row: Multi-directory paths input -->

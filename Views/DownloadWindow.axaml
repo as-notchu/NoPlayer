@@ -1,0 +1,240 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MusicPlayer.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="650"
+        x:Class="MusicPlayer.Views.DownloadWindow"
+        x:DataType="vm:DownloadWindowViewModel"
+        Title="YouTube Downloader"
+        Width="700" Height="650"
+        MinWidth="600" MinHeight="500"
+        Background="#1a1a2e"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Styles>
+        <!-- Modern button style -->
+        <Style Selector="Button.primary-btn">
+            <Setter Property="Background" Value="#e94560"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="Button.primary-btn:pointerover">
+            <Setter Property="Background" Value="#ff6b6b"/>
+        </Style>
+        <Style Selector="Button.primary-btn:pressed">
+            <Setter Property="Background" Value="#c73e54"/>
+        </Style>
+        <Style Selector="Button.primary-btn:disabled">
+            <Setter Property="Background" Value="#333"/>
+            <Setter Property="Foreground" Value="#666"/>
+        </Style>
+
+        <Style Selector="Button.secondary-btn">
+            <Setter Property="Background" Value="#0f3460"/>
+            <Setter Property="Foreground" Value="#e8e8e8"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+        <Style Selector="Button.secondary-btn:pointerover">
+            <Setter Property="Background" Value="#533483"/>
+        </Style>
+
+        <Style Selector="Button.cancel-btn">
+            <Setter Property="Background" Value="#533483"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+        <Style Selector="Button.cancel-btn:pointerover">
+            <Setter Property="Background" Value="#6d4c9f"/>
+        </Style>
+
+        <!-- Modern text box -->
+        <Style Selector="TextBox.input-box">
+            <Setter Property="Background" Value="#16213e"/>
+            <Setter Property="Foreground" Value="#e8e8e8"/>
+            <Setter Property="BorderBrush" Value="#0f3460"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+        <Style Selector="TextBox.input-box:focus">
+            <Setter Property="BorderBrush" Value="#e94560"/>
+        </Style>
+    </Window.Styles>
+
+    <Design.DataContext>
+        <vm:DownloadWindowViewModel/>
+    </Design.DataContext>
+
+    <Grid Margin="24" RowDefinitions="Auto,Auto,Auto,Auto,*,Auto">
+        <!-- Header -->
+        <TextBlock Grid.Row="0"
+                   Text="YouTube Downloader"
+                   FontSize="24"
+                   FontWeight="Bold"
+                   Foreground="#e8e8e8"
+                   Margin="0,0,0,24"/>
+
+        <!-- YouTube URL Input -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,16">
+            <TextBlock Text="YouTube URL (Video or Playlist)"
+                       Foreground="#e8e8e8"
+                       FontSize="13"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,8"/>
+            <TextBox Classes="input-box"
+                     Text="{Binding YoutubeUrl}"
+                     Watermark="https://www.youtube.com/watch?v=... or playlist URL"
+                     IsEnabled="{Binding !IsDownloading}"/>
+        </StackPanel>
+
+        <!-- Output Directory -->
+        <StackPanel Grid.Row="2" Margin="0,0,0,16">
+            <TextBlock Text="Output Directory"
+                       Foreground="#e8e8e8"
+                       FontSize="13"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,8"/>
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBox Grid.Column="0"
+                         Classes="input-box"
+                         Text="{Binding OutputDirectory}"
+                         IsReadOnly="True"/>
+                <Button Grid.Column="1"
+                        Classes="secondary-btn"
+                        Content="Browse"
+                        Margin="12,0,0,0"
+                        Click="BrowseOutput_Click"
+                        IsEnabled="{Binding !IsDownloading}"/>
+            </Grid>
+        </StackPanel>
+
+        <!-- Progress Info -->
+        <Border Grid.Row="3"
+                Background="#16213e"
+                CornerRadius="12"
+                Padding="16"
+                Margin="0,0,0,16">
+            <StackPanel Spacing="12">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding StatusMessage}"
+                               Foreground="#e8e8e8"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               TextWrapping="Wrap"/>
+                    <StackPanel Grid.Column="1"
+                                Orientation="Horizontal"
+                                Spacing="8">
+                        <TextBlock Text="{Binding CurrentProgress}"
+                                   Foreground="#e94560"
+                                   FontSize="16"
+                                   FontWeight="Bold"/>
+                        <TextBlock Text="/"
+                                   Foreground="#666"
+                                   FontSize="16"/>
+                        <TextBlock Text="{Binding TotalVideos}"
+                                   Foreground="#888"
+                                   FontSize="16"
+                                   FontWeight="Bold"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Current video title -->
+                <TextBlock Text="{Binding CurrentVideoTitle}"
+                           Foreground="#888"
+                           FontSize="12"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding CurrentVideoTitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                <!-- Progress bar (visual indicator when downloading) -->
+                <ProgressBar IsIndeterminate="{Binding IsDownloading}"
+                             Foreground="#e94560"
+                             Background="#0f3460"
+                             Height="6"
+                             CornerRadius="3"
+                             IsVisible="{Binding IsDownloading}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Download Log -->
+        <Border Grid.Row="4"
+                Background="#16213e"
+                CornerRadius="12"
+                Padding="16"
+                Margin="0,0,0,16">
+            <Grid RowDefinitions="Auto,*">
+                <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+                    <TextBlock Grid.Column="0"
+                               Text="Download Log"
+                               Foreground="#e8e8e8"
+                               FontSize="14"
+                               FontWeight="SemiBold"/>
+                    <Button Grid.Column="1"
+                            Classes="secondary-btn"
+                            Content="Clear"
+                            Padding="12,4"
+                            FontSize="11"
+                            Command="{Binding ClearLogCommand}"
+                            IsEnabled="{Binding !IsDownloading}"/>
+                </Grid>
+
+                <ScrollViewer Grid.Row="1"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding DownloadLog}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}"
+                                           Foreground="#aaa"
+                                           FontSize="11"
+                                           FontFamily="Consolas,Courier New,monospace"
+                                           TextWrapping="Wrap"
+                                           Margin="0,2"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- Action Buttons -->
+        <Grid Grid.Row="5" ColumnDefinitions="*,Auto,Auto">
+            <StackPanel Grid.Column="0"
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center">
+                <TextBlock Text="Downloads will have a 10-second delay between each song"
+                           Foreground="#666"
+                           FontSize="11"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <Button Grid.Column="1"
+                    Classes="cancel-btn"
+                    Content="Cancel"
+                    Command="{Binding CancelDownloadCommand}"
+                    IsEnabled="{Binding IsDownloading}"
+                    Margin="0,0,12,0"/>
+
+            <Button Grid.Column="2"
+                    Classes="primary-btn"
+                    Content="Start Download"
+                    Command="{Binding StartDownloadCommand}"
+                    IsEnabled="{Binding CanStartDownload}"/>
+        </Grid>
+    </Grid>
+</Window>
