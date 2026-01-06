@@ -42,7 +42,7 @@
     <PackageReference Include="Bass.NetWrapper" Version="2.4.17.4" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
     <PackageReference Include="TagLibSharp" Version="2.3.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="YoutubeExplode" Version="6.4.4" />
+    <PackageReference Include="YoutubeExplode" Version="6.5.6" />
   </ItemGroup>
 
   <!-- Native BASS libraries - based on target runtime, not build OS -->

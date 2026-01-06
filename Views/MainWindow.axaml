@@ -133,7 +133,7 @@
                             IsEnabled="{Binding !IsLoading}"/>
                     <Button Grid.Column="3"
                             Classes="secondary-btn"
-                            Content="⬇ Download from YouTube"
+                            Content="Download from YouTube"
                             Margin="8,0,0,0"
                             Click="OpenDownloadWindow_Click"
                             ToolTip.Tip="Download music from YouTube playlists"/>

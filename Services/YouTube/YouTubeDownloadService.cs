@@ -113,10 +113,10 @@ public class YouTubeDownloadService
         var streamManifest = await _youtube.Videos.Streams.GetManifestAsync(video.Id, cancellationToken);
 
         // Get the best WebM audio-only stream
-        var audioStreamInfo = streamManifest.GetAudioOnlyStreams()
+        var audioStreamInfo = streamManifest
+            .GetAudioOnlyStreams()
             .Where(s => s.Container == Container.WebM)
-            .OrderByDescending(s => s.Bitrate)
-            .FirstOrDefault();
+            .GetWithHighestBitrate();
 
         if (audioStreamInfo == null)
         {

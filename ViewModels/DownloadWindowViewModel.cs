@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MusicPlayer.Services;
 using MusicPlayer.Services.YouTube;
 
 namespace MusicPlayer.ViewModels;
@@ -14,6 +15,7 @@ public partial class DownloadWindowViewModel : ViewModelBase, IDisposable
 {
     private readonly YouTubeDownloadService _downloadService;
     private CancellationTokenSource? _cancellationTokenSource;
+    private readonly SettingsService _settingsService;
 
     [ObservableProperty]
     private string _youtubeUrl = string.Empty;
@@ -44,6 +46,7 @@ public partial class DownloadWindowViewModel : ViewModelBase, IDisposable
 
     public DownloadWindowViewModel()
     {
+        _settingsService = new SettingsService();
         _downloadService = new YouTubeDownloadService();
 
         // Subscribe to download service events
@@ -52,8 +55,7 @@ public partial class DownloadWindowViewModel : ViewModelBase, IDisposable
         _downloadService.DownloadError += OnDownloadError;
 
         // Set default output directory to Music folder
-        var musicFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
-        OutputDirectory = Path.Combine(musicFolder, "YouTube Downloads");
+        OutputDirectory = _settingsService.Settings.MusicFolderPath;
     }
 
     [RelayCommand]
