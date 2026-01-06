@@ -227,6 +227,20 @@ public partial class MainWindow : Window
         viewModel.StatusMessage = $"Added {paths.Count} directory(ies)";
     }
 
+    private async void OpenDownloadWindow_Click(object? sender, RoutedEventArgs e)
+    {
+        var downloadWindow = new DownloadWindow();
+        await downloadWindow.ShowDialog(this);
+
+        // After download window closes, refresh the library if user wants
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            // Optionally reload library to include newly downloaded songs
+            // Uncomment the line below if you want automatic refresh
+            // await viewModel.LoadLibraryCommand.ExecuteAsync(null);
+        }
+    }
+
     private void OnClosed(object? sender, EventArgs e)
     {
         if (DataContext is IDisposable disposable)
