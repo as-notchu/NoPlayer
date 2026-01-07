@@ -422,7 +422,7 @@
                                 Width="40" Height="40"
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center">
-                            <Path Data="M14,4 L8,9 L14,14 Z M7,4 L1,9 L7,14 Z"
+                            <Path Data="M18,3 L10,9 L18,15 Z M8,3 L0,9 L8,15 Z"
                                   Width="18" Height="18"
                                   Stretch="Uniform"
                                   HorizontalAlignment="Center"
@@ -435,16 +435,16 @@
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center">
                             <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <Path Data="M2,1 L18,10 L2,19 Z"
-                                      Width="22" Height="22"
+                                <Path Data="M0,0 L18,9 L0,18 Z"
+                                      Width="24" Height="24"
                                       Stretch="Uniform"
                                       Margin="2,0,0,0"
                                       HorizontalAlignment="Center"
                                       VerticalAlignment="Center"
                                       IsVisible="{Binding !IsPlaying}"
                                       Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
-                                <Path Data="M2,1 H8 V19 H2 Z M12,1 H18 V19 H12 Z"
-                                      Width="22" Height="22"
+                                <Path Data="M0,0 H7 V18 H0 Z M11,0 H18 V18 H11 Z"
+                                      Width="24" Height="24"
                                       Stretch="Uniform"
                                       HorizontalAlignment="Center"
                                       VerticalAlignment="Center"
@@ -457,7 +457,7 @@
                                 Width="40" Height="40"
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center">
-                            <Path Data="M1,4 L7,9 L1,14 Z M8,4 L14,9 L8,14 Z"
+                            <Path Data="M0,3 L8,9 L0,15 Z M10,3 L18,9 L10,15 Z"
                                   Width="18" Height="18"
                                   Stretch="Uniform"
                                   HorizontalAlignment="Center"
