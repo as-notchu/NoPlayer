@@ -422,13 +422,12 @@
                                 Width="40" Height="40"
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center">
-                            <Viewbox Width="18" Height="18"
-                                     HorizontalAlignment="Center"
-                                     VerticalAlignment="Center"
-                                     Stretch="Uniform">
-                                <Path Data="M14,4 L8,9 L14,14 Z M7,4 L1,9 L7,14 Z"
-                                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
-                            </Viewbox>
+                            <Path Data="M14,4 L8,9 L14,14 Z M7,4 L1,9 L7,14 Z"
+                                  Width="18" Height="18"
+                                  Stretch="Uniform"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
                         </Button>
                         <Button Classes="play-btn"
                                 Command="{Binding TogglePlayPauseCommand}"
@@ -436,11 +435,21 @@
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center">
                             <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text="&#9654;" FontSize="22" IsVisible="{Binding !IsPlaying}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                                           Margin="3,0,0,0"/>
-                                <TextBlock Text="&#9208;" FontSize="22" IsVisible="{Binding IsPlaying}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Path Data="M2,1 L18,10 L2,19 Z"
+                                      Width="22" Height="22"
+                                      Stretch="Uniform"
+                                      Margin="2,0,0,0"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      IsVisible="{Binding !IsPlaying}"
+                                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                <Path Data="M2,1 H8 V19 H2 Z M12,1 H18 V19 H12 Z"
+                                      Width="22" Height="22"
+                                      Stretch="Uniform"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      IsVisible="{Binding IsPlaying}"
+                                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
                             </Panel>
                         </Button>
                         <Button Classes="control-btn"
@@ -448,13 +457,12 @@
                                 Width="40" Height="40"
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center">
-                            <Viewbox Width="18" Height="18"
-                                     HorizontalAlignment="Center"
-                                     VerticalAlignment="Center"
-                                     Stretch="Uniform">
-                                <Path Data="M1,4 L7,9 L1,14 Z M8,4 L14,9 L8,14 Z"
-                                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
-                            </Viewbox>
+                            <Path Data="M1,4 L7,9 L1,14 Z M8,4 L14,9 L8,14 Z"
+                                  Width="18" Height="18"
+                                  Stretch="Uniform"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
                         </Button>
                     </StackPanel>
 
