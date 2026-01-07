@@ -23,7 +23,7 @@
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
         <Style Selector="Button.control-btn:pointerover">
-            <Setter Property="Background" Value="#0f3460"/>
+            <Setter Property="Background" Value="#1b2a4a"/>
         </Style>
         <Style Selector="Button.control-btn:pressed">
             <Setter Property="Background" Value="#533483"/>
@@ -422,9 +422,13 @@
                                 Width="40" Height="40"
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center">
-                            <TextBlock Text="&#9198;" FontSize="16"
-                                       FontFamily="Segoe UI Symbol, Noto Sans Symbols2, DejaVu Sans"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Viewbox Width="18" Height="18"
+                                     HorizontalAlignment="Center"
+                                     VerticalAlignment="Center"
+                                     Stretch="Uniform">
+                                <Path Data="M14,4 L8,9 L14,14 Z M7,4 L1,9 L7,14 Z"
+                                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                            </Viewbox>
                         </Button>
                         <Button Classes="play-btn"
                                 Command="{Binding TogglePlayPauseCommand}"
@@ -444,9 +448,13 @@
                                 Width="40" Height="40"
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center">
-                            <TextBlock Text="&#9197;" FontSize="16"
-                                       FontFamily="Segoe UI Symbol, Noto Sans Symbols2, DejaVu Sans"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Viewbox Width="18" Height="18"
+                                     HorizontalAlignment="Center"
+                                     VerticalAlignment="Center"
+                                     Stretch="Uniform">
+                                <Path Data="M1,4 L7,9 L1,14 Z M8,4 L14,9 L8,14 Z"
+                                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                            </Viewbox>
                         </Button>
                     </StackPanel>
 
