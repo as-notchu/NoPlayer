@@ -423,6 +423,7 @@
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center">
                             <TextBlock Text="&#9198;" FontSize="16"
+                                       FontFamily="Segoe UI Symbol, Noto Sans Symbols2, DejaVu Sans"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Button>
                         <Button Classes="play-btn"
@@ -444,6 +445,7 @@
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center">
                             <TextBlock Text="&#9197;" FontSize="16"
+                                       FontFamily="Segoe UI Symbol, Noto Sans Symbols2, DejaVu Sans"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Button>
                     </StackPanel>

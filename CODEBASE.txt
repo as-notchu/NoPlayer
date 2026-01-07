@@ -1,0 +1,26 @@
+Music Player (Avalonia desktop app)
+
+What this app is
+- A cross-platform desktop music player built with Avalonia UI.
+
+What it can do
+- Load audio files from a chosen folder.
+- Display a playlist/track list and allow selection.
+- Play, pause, seek, skip next/previous.
+- Shuffle and repeat playback.
+- Adjust volume and show playback progress/time.
+
+Tech stack
+- C#/.NET
+- Avalonia UI (XAML + MVVM)
+- BASS audio library (via platform-specific runtime setup scripts)
+
+How it works
+- App entry point wires Avalonia application and loads the MainWindow.
+- MainWindowViewModel exposes commands (play/pause/next/previous, etc.) and state.
+- The UI (MainWindow.axaml) binds to the view model for playback controls, track list, and sliders.
+- Services handle audio playback and media key integration.
+
+Additional info
+- Platform-specific build/publish scripts exist for macOS and Windows.
+- Assets and styling are defined in Avalonia XAML styles within Views.
