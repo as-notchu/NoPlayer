@@ -56,6 +56,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private bool _repeatEnabled;
 
     [ObservableProperty]
+    private bool _repeatOneEnabled;
+
+    [ObservableProperty]
     private double _volume = 100;
 
     [ObservableProperty]
@@ -96,6 +99,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         Volume = settings.Volume * 100;
         ShuffleEnabled = settings.ShuffleEnabled;
         RepeatEnabled = settings.RepeatEnabled;
+        RepeatOneEnabled = settings.RepeatOneEnabled;
 
         _audioPlayer.Volume = (int)Volume;
 
@@ -147,6 +151,11 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     partial void OnRepeatEnabledChanged(bool value)
     {
         _settingsService.UpdateRepeat(value);
+    }
+
+    partial void OnRepeatOneEnabledChanged(bool value)
+    {
+        _settingsService.UpdateRepeatOne(value);
     }
 
     private void OnPlaybackStarted(object? sender, EventArgs e)
@@ -299,18 +308,27 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (track == null) return;
 
-        CurrentTrack = track;
-        _audioPlayer.Play(track);
-
-        if (ShuffleEnabled)
+        try
         {
-            var index = Tracks.IndexOf(track);
-            if (_shuffleHistoryIndex < _shuffleHistory.Count - 1)
+            CurrentTrack = track;
+            _audioPlayer.Play(track);
+
+            if (ShuffleEnabled)
             {
-                _shuffleHistory.RemoveRange(_shuffleHistoryIndex + 1, _shuffleHistory.Count - _shuffleHistoryIndex - 1);
+                var index = Tracks.IndexOf(track);
+                if (_shuffleHistoryIndex < _shuffleHistory.Count - 1)
+                {
+                    _shuffleHistory.RemoveRange(_shuffleHistoryIndex + 1, _shuffleHistory.Count - _shuffleHistoryIndex - 1);
+                }
+                _shuffleHistory.Add(index);
+                _shuffleHistoryIndex = _shuffleHistory.Count - 1;
             }
-            _shuffleHistory.Add(index);
-            _shuffleHistoryIndex = _shuffleHistory.Count - 1;
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Failed to play track: {ex.Message}";
+            CurrentTrack = null;
+            IsPlaying = false;
         }
     }
 
@@ -336,6 +354,13 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private void PlayNext()
     {
         if (Tracks.Count == 0) return;
+
+        // If Repeat One is enabled, just replay the current track
+        if (RepeatOneEnabled && CurrentTrack != null)
+        {
+            PlayTrack(CurrentTrack);
+            return;
+        }
 
         int nextIndex;
 
@@ -433,6 +458,12 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private void ToggleRepeat()
     {
         RepeatEnabled = !RepeatEnabled;
+    }
+
+    [RelayCommand]
+    private void ToggleRepeatOne()
+    {
+        RepeatOneEnabled = !RepeatOneEnabled;
     }
 
     [RelayCommand]

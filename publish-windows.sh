@@ -17,20 +17,25 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-APP_NAME="MusicPlayer"
+APP_NAME="NoPlayer"
 VERSION="$1"
-OUTPUT_DIR="publish-windows"
+BUILD_ROOT="builds/windows"
+OUTPUT_DIR="${BUILD_ROOT}/publish"
 ARCHIVE_NAME="${APP_NAME}-${VERSION}-Windows-x64"
+ARCHIVE_PATH="${BUILD_ROOT}/${ARCHIVE_NAME}.zip"
 
-echo "🎵 Building Music Player v${VERSION} for Windows..."
+echo "🎵 Building NoPlayer v${VERSION} for Windows..."
 echo ""
 
 # Clean previous builds
 echo "🧹 Cleaning previous builds..."
 rm -rf "$OUTPUT_DIR"
-rm -rf "${ARCHIVE_NAME}.zip"
+rm -rf "$ARCHIVE_PATH"
 rm -rf bin/Release
 rm -rf obj/Release
+
+# Ensure output directory exists
+mkdir -p "$BUILD_ROOT"
 
 # Build for Windows x64
 echo "🔨 Building .NET application for Windows x64..."
@@ -47,13 +52,13 @@ dotnet publish -c Release -r win-x64 --self-contained true \
 # Create README
 echo "📝 Creating README..."
 cat > "$OUTPUT_DIR/README.txt" << EOF
-Music Player v${VERSION}
+NoPlayer v${VERSION}
 ========================
 
 Installation
 ------------
 1. Extract all files from the archive
-2. Run MusicPlayer.exe
+2. Run NoPlayer.exe
 3. (Optional) Create a desktop shortcut
 
 First Launch
@@ -83,9 +88,9 @@ EOF
 
 # Create a simple batch launcher
 echo "📝 Creating launcher script..."
-cat > "$OUTPUT_DIR/Launch MusicPlayer.bat" << 'EOF'
+cat > "$OUTPUT_DIR/Launch NoPlayer.bat" << 'EOF'
 @echo off
-start "" "%~dp0MusicPlayer.exe"
+start "" "%~dp0NoPlayer.exe"
 EOF
 
 # Create ZIP archive
@@ -97,14 +102,16 @@ cd ..
 echo ""
 echo "✅ Build complete!"
 echo ""
-echo "📦 Windows package created: ${ARCHIVE_NAME}.zip"
+echo "📦 Windows package created: $ARCHIVE_PATH"
 echo "📂 Standalone folder: $OUTPUT_DIR"
 echo ""
 echo "📤 To distribute:"
-echo "   Share ${ARCHIVE_NAME}.zip with Windows users"
+echo "   Share $ARCHIVE_PATH with Windows users"
 echo ""
 echo "💡 Tip: For a proper installer, consider using tools like:"
 echo "   - Inno Setup (free)"
 echo "   - WiX Toolset (free)"
 echo "   - Advanced Installer"
 echo ""
+
+

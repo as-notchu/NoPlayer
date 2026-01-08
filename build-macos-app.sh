@@ -5,18 +5,22 @@
 
 set -e
 
-APP_NAME="MusicPlayer"
-APP_BUNDLE="${APP_NAME}.app"
+APP_NAME="NoPlayer"
+BUILD_ROOT="builds/macos"
+APP_BUNDLE="${BUILD_ROOT}/${APP_NAME}.app"
 BUILD_DIR="bin/Release/net10.0/osx-arm64/publish"
-IDENTIFIER="com.musicplayer.app"
+IDENTIFIER="com.noplayer.app"
 VERSION="1.0.0"
 
-echo "Building Music Player for macOS..."
+echo "Building NoPlayer for macOS..."
 
 # Clean previous builds
 echo "Cleaning previous builds..."
 rm -rf "$APP_BUNDLE"
 rm -rf bin/Release
+
+# Ensure output directory exists
+mkdir -p "$BUILD_ROOT"
 
 # Build the app in Release mode for macOS ARM64 (Apple Silicon)
 echo "Building .NET application..."
@@ -44,7 +48,7 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
     <key>CFBundleDisplayName</key>
     <string>${APP_NAME}</string>
     <key>CFBundleExecutable</key>
-    <string>MusicPlayer</string>
+    <string>NoPlayer</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
@@ -70,7 +74,7 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
 EOF
 
 # Make the executable... executable
-chmod +x "$APP_BUNDLE/Contents/MacOS/MusicPlayer"
+chmod +x "$APP_BUNDLE/Contents/MacOS/NoPlayer"
 
 echo ""
 echo "✅ Build complete!"
@@ -85,3 +89,4 @@ echo "Note: First launch may require:"
 echo "- Right-click → Open (to bypass Gatekeeper)"
 echo "- Grant Accessibility permissions in System Settings"
 echo ""
+

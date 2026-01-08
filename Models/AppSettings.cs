@@ -11,6 +11,7 @@ public class AppSettings
     public double Volume { get; set; } = 1.0;
     public bool ShuffleEnabled { get; set; }
     public bool RepeatEnabled { get; set; }
+    public bool RepeatOneEnabled { get; set; }
     public List<SavedPlaylist> CustomPlaylists { get; set; } = new();
 
     private static string GetDefaultMusicFolder()

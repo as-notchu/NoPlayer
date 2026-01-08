@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Timers;
@@ -61,9 +62,18 @@ public class AudioPlayerService : IDisposable
     {
         if (_bassInitialized) return;
 
-        // Get the directory where the executable is located
-        var assemblyLocation = Assembly.GetExecutingAssembly().Location;
-        var baseDir = Path.GetDirectoryName(assemblyLocation) ?? AppContext.BaseDirectory;
+        // Get the directory where the executable/plugins are located
+        // For single-file apps, we need to check multiple locations:
+        // 1. AppContext.BaseDirectory - where the exe is located
+        // 2. The extraction directory for single-file apps (if different)
+        var baseDir = AppContext.BaseDirectory;
+
+        // For single-file published apps on Windows, native libraries may be extracted
+        // to a temp directory. We need to find where the BASS plugins actually are.
+        var pluginSearchPaths = GetPluginSearchPaths(baseDir);
+
+        Console.WriteLine($"Initializing BASS from directory: {baseDir}");
+        Console.WriteLine($"Plugin search paths: {string.Join(", ", pluginSearchPaths)}");
 
         // Initialize BASS with default device
         if (!Bass.Init(-1, 44100, DeviceInitFlags.Default))
@@ -75,28 +85,72 @@ public class AudioPlayerService : IDisposable
             }
         }
 
+        Console.WriteLine("BASS initialized successfully");
+
         // Load plugins for additional format support (platform-specific)
+        // Note: bassopus must be loaded before basswebm for Opus audio in WebM files
         if (OperatingSystem.IsWindows())
         {
-            LoadPlugin(baseDir, "bassflac.dll");
-            LoadPlugin(baseDir, "basswebm.dll");
+            Console.WriteLine("Loading Windows audio plugins...");
+            LoadPluginFromPaths(pluginSearchPaths, "bassflac.dll");
+            LoadPluginFromPaths(pluginSearchPaths, "bassopus.dll");
+            LoadPluginFromPaths(pluginSearchPaths, "basswebm.dll");
         }
         else if (OperatingSystem.IsMacOS())
         {
-            LoadPlugin(baseDir, "libbassflac.dylib");
-            LoadPlugin(baseDir, "libbasswebm.dylib");
+            Console.WriteLine("Loading macOS audio plugins...");
+            LoadPluginFromPaths(pluginSearchPaths, "libbassflac.dylib");
+            LoadPluginFromPaths(pluginSearchPaths, "libbassopus.dylib");
+            LoadPluginFromPaths(pluginSearchPaths, "libbasswebm.dylib");
         }
 
         _bassInitialized = true;
     }
 
-    private static void LoadPlugin(string baseDir, string pluginName)
+    private static List<string> GetPluginSearchPaths(string baseDir)
     {
-        var pluginPath = Path.Combine(baseDir, pluginName);
-        if (File.Exists(pluginPath))
+        var paths = new List<string> { baseDir };
+
+        // Check NATIVE_DLL_SEARCH_DIRECTORIES for single-file extraction paths
+        var nativeDllPaths = AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES") as string;
+        if (!string.IsNullOrEmpty(nativeDllPaths))
         {
-            Bass.PluginLoad(pluginPath);
+            // Split by platform-specific separator (semicolon on Windows, colon on Unix)
+            var separator = OperatingSystem.IsWindows() ? ';' : ':';
+            foreach (var path in nativeDllPaths.Split(separator, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var trimmedPath = path.Trim();
+                if (!string.IsNullOrEmpty(trimmedPath) && Directory.Exists(trimmedPath) && !paths.Contains(trimmedPath))
+                {
+                    paths.Add(trimmedPath);
+                }
+            }
         }
+
+        return paths;
+    }
+
+    private static void LoadPluginFromPaths(List<string> searchPaths, string pluginName)
+    {
+        foreach (var dir in searchPaths)
+        {
+            var pluginPath = Path.Combine(dir, pluginName);
+            if (File.Exists(pluginPath))
+            {
+                var handle = Bass.PluginLoad(pluginPath);
+                if (handle == 0)
+                {
+                    var error = Bass.LastError;
+                    Console.WriteLine($"Warning: Failed to load plugin '{pluginName}' from '{pluginPath}': {error}");
+                }
+                else
+                {
+                    Console.WriteLine($"Successfully loaded plugin: {pluginName} from {pluginPath}");
+                    return; // Plugin loaded successfully
+                }
+            }
+        }
+        Console.WriteLine($"Warning: Plugin not found in any search path: {pluginName}");
     }
 
     private void OnPositionTimerElapsed(object? sender, ElapsedEventArgs e)
@@ -128,12 +182,26 @@ public class AudioPlayerService : IDisposable
     {
         Stop();
 
-        _streamHandle = Bass.CreateStream(track.FilePath, 0, 0, BassFlags.Default);
+        // Verify file exists
+        if (!File.Exists(track.FilePath))
+        {
+            throw new InvalidOperationException($"File not found: '{track.FilePath}'");
+        }
+
+        // Use Unicode flag on Windows to properly handle file paths with special characters
+        var flags = OperatingSystem.IsWindows() ? BassFlags.Unicode : BassFlags.Default;
+        _streamHandle = Bass.CreateStream(track.FilePath, 0, 0, flags);
 
         if (_streamHandle == 0)
         {
             var error = Bass.LastError;
-            throw new InvalidOperationException($"Failed to create stream for '{track.FilePath}': {error}");
+            var errorMsg = error switch
+            {
+                Errors.FileFormat => $"Unsupported file format. The file may be corrupted or the required codec/plugin is missing.",
+                Errors.FileOpen => $"Could not open the file. It may be in use by another program.",
+                _ => $"Failed to load audio file: {error}"
+            };
+            throw new InvalidOperationException($"{errorMsg}\nFile: '{track.FilePath}'");
         }
 
         // Set volume
