@@ -128,7 +128,9 @@ public class AudioPlayerService : IDisposable
     {
         Stop();
 
-        _streamHandle = Bass.CreateStream(track.FilePath, 0, 0, BassFlags.Default);
+        // Use Unicode flag on Windows to properly handle file paths with special characters
+        var flags = OperatingSystem.IsWindows() ? BassFlags.Unicode : BassFlags.Default;
+        _streamHandle = Bass.CreateStream(track.FilePath, 0, 0, flags);
 
         if (_streamHandle == 0)
         {

@@ -299,18 +299,27 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (track == null) return;
 
-        CurrentTrack = track;
-        _audioPlayer.Play(track);
-
-        if (ShuffleEnabled)
+        try
         {
-            var index = Tracks.IndexOf(track);
-            if (_shuffleHistoryIndex < _shuffleHistory.Count - 1)
+            CurrentTrack = track;
+            _audioPlayer.Play(track);
+
+            if (ShuffleEnabled)
             {
-                _shuffleHistory.RemoveRange(_shuffleHistoryIndex + 1, _shuffleHistory.Count - _shuffleHistoryIndex - 1);
+                var index = Tracks.IndexOf(track);
+                if (_shuffleHistoryIndex < _shuffleHistory.Count - 1)
+                {
+                    _shuffleHistory.RemoveRange(_shuffleHistoryIndex + 1, _shuffleHistory.Count - _shuffleHistoryIndex - 1);
+                }
+                _shuffleHistory.Add(index);
+                _shuffleHistoryIndex = _shuffleHistory.Count - 1;
             }
-            _shuffleHistory.Add(index);
-            _shuffleHistoryIndex = _shuffleHistory.Count - 1;
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Failed to play track: {ex.Message}";
+            CurrentTrack = null;
+            IsPlaying = false;
         }
     }
 
