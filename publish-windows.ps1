@@ -32,7 +32,7 @@ if (Test-Path "obj\Release") {
     Remove-Item -Recurse -Force "obj\Release"
 }
 
-# Build for Windows x64
+# Build for Windows x64 (single-file with native libraries extracted)
 Write-Host "Building .NET application for Windows x64..." -ForegroundColor Yellow
 dotnet publish -c Release -r win-x64 --self-contained true `
     -p:PublishSingleFile=true `

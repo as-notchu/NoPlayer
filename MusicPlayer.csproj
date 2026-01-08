@@ -39,7 +39,7 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
     <PackageReference Include="ManagedBass" Version="3.1.1" />
     <PackageReference Include="ManagedBass.Mix" Version="3.1.1" />
-    <PackageReference Include="Bass.NetWrapper" Version="2.4.17.4" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+    <PackageReference Include="Bass.NetWrapper" Version="2.4.12.5" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
     <PackageReference Include="TagLibSharp" Version="2.3.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="YoutubeExplode" Version="6.5.6" />
