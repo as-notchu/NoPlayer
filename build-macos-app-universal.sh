@@ -5,17 +5,21 @@
 
 set -e
 
-APP_NAME="MusicPlayer"
-APP_BUNDLE="${APP_NAME}.app"
-IDENTIFIER="com.musicplayer.app"
+APP_NAME="NoPlayer"
+BUILD_ROOT="builds/macos"
+APP_BUNDLE="${BUILD_ROOT}/${APP_NAME}.app"
+IDENTIFIER="com.noplayer.app"
 VERSION="1.0.0"
 
-echo "Building Universal Music Player for macOS (Intel + Apple Silicon)..."
+echo "Building Universal NoPlayer for macOS (Intel + Apple Silicon)..."
 
 # Clean previous builds
 echo "Cleaning previous builds..."
 rm -rf "$APP_BUNDLE"
 rm -rf bin/Release
+
+# Ensure output directory exists
+mkdir -p "$BUILD_ROOT"
 
 # Build for both architectures
 echo "Building for Apple Silicon (ARM64)..."
@@ -39,10 +43,10 @@ ARM64_DIR="bin/Release/net10.0/osx-arm64/publish"
 X64_DIR="bin/Release/net10.0/osx-x64/publish"
 
 # Create universal binary for main executable
-if [ -f "$ARM64_DIR/MusicPlayer" ] && [ -f "$X64_DIR/MusicPlayer" ]; then
-    lipo -create "$ARM64_DIR/MusicPlayer" "$X64_DIR/MusicPlayer" \
-         -output "$APP_BUNDLE/Contents/MacOS/MusicPlayer"
-    echo "✓ Created universal MusicPlayer executable"
+if [ -f "$ARM64_DIR/NoPlayer" ] && [ -f "$X64_DIR/NoPlayer" ]; then
+    lipo -create "$ARM64_DIR/NoPlayer" "$X64_DIR/NoPlayer" \
+         -output "$APP_BUNDLE/Contents/MacOS/NoPlayer"
+    echo "✓ Created universal NoPlayer executable"
 fi
 
 # Find and create universal binaries for native libraries
@@ -76,7 +80,7 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
     <key>CFBundleDisplayName</key>
     <string>${APP_NAME}</string>
     <key>CFBundleExecutable</key>
-    <string>MusicPlayer</string>
+    <string>NoPlayer</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
@@ -102,12 +106,12 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
 EOF
 
 # Make the executable... executable
-chmod +x "$APP_BUNDLE/Contents/MacOS/MusicPlayer"
+chmod +x "$APP_BUNDLE/Contents/MacOS/NoPlayer"
 
 # Verify universal binaries were created
 echo ""
 echo "Verifying universal binaries..."
-file "$APP_BUNDLE/Contents/MacOS/MusicPlayer"
+file "$APP_BUNDLE/Contents/MacOS/NoPlayer"
 
 echo ""
 echo "✅ Universal build complete!"
@@ -123,3 +127,5 @@ echo "Note: First launch may require:"
 echo "- Right-click → Open (to bypass Gatekeeper)"
 echo "- Grant Accessibility permissions in System Settings"
 echo ""
+
+

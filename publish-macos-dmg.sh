@@ -18,23 +18,28 @@ if [ -z "$1" ]; then
 fi
 
 APP_NAME="NoPlayer"
-APP_BUNDLE="${APP_NAME}.app"
+BUILD_ROOT="builds/macos"
+APP_BUNDLE="${BUILD_ROOT}/${APP_NAME}.app"
 VERSION="$1"
 DMG_NAME="${APP_NAME}-${VERSION}-macOS"
+DMG_PATH="${BUILD_ROOT}/${DMG_NAME}.dmg"
 BUILD_DIR="bin/Release/net10.0/osx-arm64/publish"
 IDENTIFIER="com.noplayer.app"
 TEMP_DMG="temp.dmg"
 ICON_FILE="Assets/ic.icns"
 
-echo "🎵 Building Music Player v${VERSION} DMG for macOS..."
+echo "🎵 Building NoPlayer v${VERSION} DMG for macOS..."
 echo ""
 
 # Clean previous builds
 echo "🧹 Cleaning previous builds..."
 rm -rf "$APP_BUNDLE"
-rm -rf "${DMG_NAME}.dmg"
+rm -rf "$DMG_PATH"
 rm -rf bin/Release
 rm -rf obj/Release
+
+# Ensure output directory exists
+mkdir -p "$BUILD_ROOT"
 
 # Build the app in Release mode for macOS ARM64 (Apple Silicon)
 echo "🔨 Building .NET application for Apple Silicon..."
@@ -118,7 +123,7 @@ ln -s /Applications "$DMG_TEMP_DIR/Applications"
 hdiutil create -volname "$APP_NAME" \
   -srcfolder "$DMG_TEMP_DIR" \
   -ov -format UDZO \
-  "${DMG_NAME}.dmg"
+  "$DMG_PATH"
 
 # Clean up
 rm -rf "$DMG_TEMP_DIR"
@@ -126,18 +131,20 @@ rm -rf "$DMG_TEMP_DIR"
 echo ""
 echo "✅ Build complete!"
 echo ""
-echo "📦 DMG installer created: ${DMG_NAME}.dmg"
+echo "📦 DMG installer created: $DMG_PATH"
 echo "📱 App bundle available: $APP_BUNDLE"
 echo ""
 echo "📤 To distribute:"
-echo "   Share ${DMG_NAME}.dmg with users"
+echo "   Share $DMG_PATH with users"
 echo ""
 echo "🚀 To install locally:"
-echo "   1. Double-click ${DMG_NAME}.dmg"
+echo "   1. Double-click $DMG_PATH"
 echo "   2. Drag ${APP_NAME} to Applications folder"
 echo "   3. Launch from Applications or Spotlight"
 echo ""
 echo "⚠️  First launch notes:"
 echo "   - Right-click → Open (to bypass Gatekeeper)"
-echo "   - Or run: xattr -cr /Applications/${APP_BUNDLE}"
+echo "   - Or run: xattr -cr /Applications/${APP_NAME}.app"
 echo ""
+
+

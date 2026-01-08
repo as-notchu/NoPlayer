@@ -10,11 +10,13 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$AppName = "MusicPlayer"
-$OutputDir = "publish-windows"
+$AppName = "NoPlayer"
+$BuildRoot = "builds\\windows"
+$OutputDir = Join-Path $BuildRoot "publish"
 $ArchiveName = "${AppName}-${Version}-Windows-x64"
+$ArchivePath = Join-Path $BuildRoot "${ArchiveName}.zip"
 
-Write-Host "Building Music Player v${Version} for Windows..." -ForegroundColor Cyan
+Write-Host "Building NoPlayer v${Version} for Windows..." -ForegroundColor Cyan
 Write-Host ""
 
 # Clean previous builds
@@ -22,14 +24,18 @@ Write-Host "Cleaning previous builds..." -ForegroundColor Yellow
 if (Test-Path $OutputDir) {
     Remove-Item -Recurse -Force $OutputDir
 }
-if (Test-Path "${ArchiveName}.zip") {
-    Remove-Item -Force "${ArchiveName}.zip"
+if (Test-Path $ArchivePath) {
+    Remove-Item -Force $ArchivePath
 }
 if (Test-Path "bin\Release") {
     Remove-Item -Recurse -Force "bin\Release"
 }
 if (Test-Path "obj\Release") {
     Remove-Item -Recurse -Force "obj\Release"
+}
+
+if (-not (Test-Path $BuildRoot)) {
+    New-Item -ItemType Directory -Path $BuildRoot | Out-Null
 }
 
 # Build for Windows x64 (single-file with native libraries extracted)
@@ -52,13 +58,13 @@ if ($LASTEXITCODE -ne 0) {
 # Create README
 Write-Host "Creating README..." -ForegroundColor Yellow
 $readmeContent = @"
-Music Player v${Version}
+NoPlayer v${Version}
 ========================
 
 Installation
 ------------
 1. Extract all files from the archive
-2. Run NoPlayer.exe (or MusicPlayer.exe)
+2. Run NoPlayer.exe
 3. (Optional) Create a desktop shortcut
 
 First Launch
@@ -94,21 +100,21 @@ $launcherContent = '@echo off
 start "" "%~dp0NoPlayer.exe"
 '
 
-$launcherPath = Join-Path $OutputDir "Launch-MusicPlayer.bat"
+$launcherPath = Join-Path $OutputDir "Launch-NoPlayer.bat"
 Set-Content -Path $launcherPath -Value $launcherContent
 
 # Create ZIP archive
 Write-Host "Creating ZIP archive..." -ForegroundColor Yellow
-Compress-Archive -Path "$OutputDir\*" -DestinationPath "${ArchiveName}.zip" -Force
+Compress-Archive -Path "$OutputDir\*" -DestinationPath $ArchivePath -Force
 
 Write-Host ""
 Write-Host "Build complete!" -ForegroundColor Green
 Write-Host ""
-Write-Host "Windows package created: ${ArchiveName}.zip" -ForegroundColor Green
+Write-Host "Windows package created: $ArchivePath" -ForegroundColor Green
 Write-Host "Standalone folder: $OutputDir" -ForegroundColor Green
 Write-Host ""
 Write-Host "To distribute:" -ForegroundColor Cyan
-Write-Host "   Share ${ArchiveName}.zip with Windows users"
+Write-Host "   Share $ArchivePath with Windows users"
 Write-Host ""
 Write-Host "Tip: For a proper installer, consider using tools like:" -ForegroundColor Yellow
 Write-Host "   - Inno Setup (free)"
