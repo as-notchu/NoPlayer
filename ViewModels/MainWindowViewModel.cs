@@ -355,6 +355,13 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (Tracks.Count == 0) return;
 
+        // If Repeat One is enabled, just replay the current track
+        if (RepeatOneEnabled && CurrentTrack != null)
+        {
+            PlayTrack(CurrentTrack);
+            return;
+        }
+
         int nextIndex;
 
         if (ShuffleEnabled)
@@ -410,6 +417,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private void PlayPrevious()
     {
         if (Tracks.Count == 0) return;
+
         if (_audioPlayer.Time > 3000)
         {
             _audioPlayer.Seek(0);
