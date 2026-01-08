@@ -99,6 +99,34 @@
             <Setter Property="Background" Value="#0f3460"/>
         </Style>
 
+        <!-- Track text colors (default state) -->
+        <Style Selector="TextBlock.title-text">
+            <Setter Property="Foreground" Value="#e8e8e8"/>
+        </Style>
+        <Style Selector="TextBlock.artist-text">
+            <Setter Property="Foreground" Value="#888"/>
+        </Style>
+        <Style Selector="TextBlock.album-text">
+            <Setter Property="Foreground" Value="#888"/>
+        </Style>
+        <Style Selector="TextBlock.duration-text">
+            <Setter Property="Foreground" Value="#666"/>
+        </Style>
+
+        <!-- Selected track text colors -->
+        <Style Selector="ListBoxItem:selected TextBlock.title-text">
+            <Setter Property="Foreground" Value="#faffad"/>
+        </Style>
+        <Style Selector="ListBoxItem:selected TextBlock.artist-text">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="ListBoxItem:selected TextBlock.album-text">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="ListBoxItem:selected TextBlock.duration-text">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
         <!-- Slider styling -->
         <Style Selector="Slider">
             <Setter Property="Foreground" Value="#e94560"/>
@@ -230,29 +258,29 @@
                                     <!-- Track info -->
                                     <StackPanel Grid.Column="2" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding DisplayName}"
+                                                   Classes="title-text"
                                                    FontSize="15"
                                                    FontWeight="SemiBold"
-                                                   Foreground="#e8e8e8"
                                                    TextTrimming="CharacterEllipsis"/>
                                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                                             <TextBlock Text="{Binding DisplayArtist}"
-                                                       FontSize="13"
-                                                       Foreground="#888"/>
+                                                       Classes="artist-text"
+                                                       FontSize="13"/>
                                             <TextBlock Text=" - "
                                                        FontSize="13"
                                                        Foreground="#666"/>
                                             <TextBlock Text="{Binding DisplayAlbum}"
+                                                       Classes="album-text"
                                                        FontSize="13"
-                                                       Foreground="#888"
                                                        TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
                                     </StackPanel>
 
                                     <!-- Duration -->
                                     <TextBlock Grid.Column="3"
+                                               Classes="duration-text"
                                                Text="{Binding DurationFormatted}"
                                                VerticalAlignment="Center"
-                                               Foreground="#666"
                                                FontSize="13"
                                                Margin="16,0,0,0"/>
 
