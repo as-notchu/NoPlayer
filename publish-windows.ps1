@@ -14,11 +14,11 @@ $AppName = "MusicPlayer"
 $OutputDir = "publish-windows"
 $ArchiveName = "${AppName}-${Version}-Windows-x64"
 
-Write-Host "🎵 Building Music Player v${Version} for Windows..." -ForegroundColor Cyan
+Write-Host "Building Music Player v${Version} for Windows..." -ForegroundColor Cyan
 Write-Host ""
 
 # Clean previous builds
-Write-Host "🧹 Cleaning previous builds..." -ForegroundColor Yellow
+Write-Host "Cleaning previous builds..." -ForegroundColor Yellow
 if (Test-Path $OutputDir) {
     Remove-Item -Recurse -Force $OutputDir
 }
@@ -33,7 +33,7 @@ if (Test-Path "obj\Release") {
 }
 
 # Build for Windows x64
-Write-Host "🔨 Building .NET application for Windows x64..." -ForegroundColor Yellow
+Write-Host "Building .NET application for Windows x64..." -ForegroundColor Yellow
 dotnet publish -c Release -r win-x64 --self-contained true `
     -p:PublishSingleFile=true `
     -p:IncludeNativeLibrariesForSelfExtract=true `
@@ -45,12 +45,12 @@ dotnet publish -c Release -r win-x64 --self-contained true `
     -o "$OutputDir"
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ Build failed!" -ForegroundColor Red
+    Write-Host "Build failed!" -ForegroundColor Red
     exit 1
 }
 
 # Create README
-Write-Host "📝 Creating README..." -ForegroundColor Yellow
+Write-Host "Creating README..." -ForegroundColor Yellow
 $readmeContent = @"
 Music Player v${Version}
 ========================
@@ -64,7 +64,7 @@ Installation
 First Launch
 ------------
 Windows may show a security warning because the app isn't signed.
-Click "More info" → "Run anyway" to launch the app.
+Click "More info" -> "Run anyway" to launch the app.
 
 System Requirements
 -------------------
@@ -83,34 +83,34 @@ Support
 -------
 For issues or questions, please visit the GitHub repository.
 
-Copyright © 2025. All rights reserved.
+Copyright (C) 2025. All rights reserved.
 "@
 
 Set-Content -Path "$OutputDir\README.txt" -Value $readmeContent
 
 # Create a simple batch launcher
-Write-Host "📝 Creating launcher script..." -ForegroundColor Yellow
-$launcherContent = @"
-@echo off
+Write-Host "Creating launcher script..." -ForegroundColor Yellow
+$launcherContent = '@echo off
 start "" "%~dp0NoPlayer.exe"
-"@
+'
 
-Set-Content -Path "$OutputDir\Launch MusicPlayer.bat" -Value $launcherContent
+$launcherPath = Join-Path $OutputDir "Launch-MusicPlayer.bat"
+Set-Content -Path $launcherPath -Value $launcherContent
 
 # Create ZIP archive
-Write-Host "📦 Creating ZIP archive..." -ForegroundColor Yellow
+Write-Host "Creating ZIP archive..." -ForegroundColor Yellow
 Compress-Archive -Path "$OutputDir\*" -DestinationPath "${ArchiveName}.zip" -Force
 
 Write-Host ""
-Write-Host "✅ Build complete!" -ForegroundColor Green
+Write-Host "Build complete!" -ForegroundColor Green
 Write-Host ""
-Write-Host "📦 Windows package created: ${ArchiveName}.zip" -ForegroundColor Green
-Write-Host "📂 Standalone folder: $OutputDir" -ForegroundColor Green
+Write-Host "Windows package created: ${ArchiveName}.zip" -ForegroundColor Green
+Write-Host "Standalone folder: $OutputDir" -ForegroundColor Green
 Write-Host ""
-Write-Host "📤 To distribute:" -ForegroundColor Cyan
+Write-Host "To distribute:" -ForegroundColor Cyan
 Write-Host "   Share ${ArchiveName}.zip with Windows users"
 Write-Host ""
-Write-Host "💡 Tip: For a proper installer, consider using tools like:" -ForegroundColor Yellow
+Write-Host "Tip: For a proper installer, consider using tools like:" -ForegroundColor Yellow
 Write-Host "   - Inno Setup (free)"
 Write-Host "   - WiX Toolset (free)"
 Write-Host "   - Advanced Installer"
