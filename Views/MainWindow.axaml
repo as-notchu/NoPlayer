@@ -438,6 +438,12 @@
                                 <TextBlock Text="Repeat" FontSize="11"/>
                             </StackPanel>
                         </ToggleButton>
+                        <ToggleButton Classes="mode-btn"
+                                      IsChecked="{Binding RepeatOneEnabled}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="Repeat One" FontSize="11"/>
+                            </StackPanel>
+                        </ToggleButton>
                     </StackPanel>
 
                     <!-- Center: Main Controls -->

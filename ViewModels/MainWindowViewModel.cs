@@ -56,6 +56,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private bool _repeatEnabled;
 
     [ObservableProperty]
+    private bool _repeatOneEnabled;
+
+    [ObservableProperty]
     private double _volume = 100;
 
     [ObservableProperty]
@@ -96,6 +99,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         Volume = settings.Volume * 100;
         ShuffleEnabled = settings.ShuffleEnabled;
         RepeatEnabled = settings.RepeatEnabled;
+        RepeatOneEnabled = settings.RepeatOneEnabled;
 
         _audioPlayer.Volume = (int)Volume;
 
@@ -147,6 +151,11 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     partial void OnRepeatEnabledChanged(bool value)
     {
         _settingsService.UpdateRepeat(value);
+    }
+
+    partial void OnRepeatOneEnabledChanged(bool value)
+    {
+        _settingsService.UpdateRepeatOne(value);
     }
 
     private void OnPlaybackStarted(object? sender, EventArgs e)
@@ -401,7 +410,6 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private void PlayPrevious()
     {
         if (Tracks.Count == 0) return;
-
         if (_audioPlayer.Time > 3000)
         {
             _audioPlayer.Seek(0);
@@ -442,6 +450,12 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private void ToggleRepeat()
     {
         RepeatEnabled = !RepeatEnabled;
+    }
+
+    [RelayCommand]
+    private void ToggleRepeatOne()
+    {
+        RepeatOneEnabled = !RepeatOneEnabled;
     }
 
     [RelayCommand]

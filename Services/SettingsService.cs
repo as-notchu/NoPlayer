@@ -73,6 +73,12 @@ public class SettingsService
         Save();
     }
 
+    public void UpdateRepeatOne(bool enabled)
+    {
+        Settings.RepeatOneEnabled = enabled;
+        Save();
+    }
+
     public void UpdateMusicDirectories(System.Collections.Generic.List<string> directories)
     {
         Settings.MusicDirectories = directories;
