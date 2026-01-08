@@ -417,34 +417,62 @@
                                 Orientation="Horizontal"
                                 HorizontalAlignment="Center"
                                 Spacing="12">
+                        <!-- Previous Button (<<) -->
                         <Button Classes="control-btn"
                                 Command="{Binding PlayPreviousCommand}"
                                 Width="40" Height="40"
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center">
-                            <TextBlock Text="&#9198;" FontSize="16"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Viewbox Width="24" Height="24">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="{Binding $parent[Button].Foreground}"
+                                          Data="M11,7 L11,17 L5,12 Z M18,7 L18,17 L12,12 Z"/>
+                                </Canvas>
+                                <Viewbox.RenderTransform>
+                                    <TranslateTransform X="-1" Y="1"/>
+                                </Viewbox.RenderTransform>
+                            </Viewbox>
                         </Button>
+
+                        <!-- Play/Pause Button -->
                         <Button Classes="play-btn"
                                 Command="{Binding TogglePlayPauseCommand}"
                                 Width="56" Height="56"
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center">
-                            <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text="&#9654;" FontSize="22" IsVisible="{Binding !IsPlaying}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                                           Margin="3,0,0,0"/>
-                                <TextBlock Text="&#9208;" FontSize="22" IsVisible="{Binding IsPlaying}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Panel>
+                                <!-- Play Icon -->
+                                <Viewbox Width="26" Height="26" IsVisible="{Binding !IsPlaying}">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Fill="{Binding $parent[Button].Foreground}"
+                                              Data="M8,5 L8,19 L19,12 Z"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <!-- Pause Icon -->
+                                <Viewbox Width="26" Height="26" IsVisible="{Binding IsPlaying}">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Fill="{Binding $parent[Button].Foreground}"
+                                              Data="M6,4 L10,4 L10,20 L6,20 Z M14,4 L18,4 L18,20 L14,20 Z"/>
+                                    </Canvas>
+                                </Viewbox>
                             </Panel>
                         </Button>
+
+                        <!-- Next Button (>>) -->
                         <Button Classes="control-btn"
                                 Command="{Binding PlayNextCommand}"
                                 Width="40" Height="40"
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center">
-                            <TextBlock Text="&#9197;" FontSize="16"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Viewbox Width="24" Height="24">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="{Binding $parent[Button].Foreground}"
+                                          Data="M6,7 L6,17 L12,12 Z M13,7 L13,17 L19,12 Z"/>
+                                </Canvas>
+                                <Viewbox.RenderTransform>
+                                    <TranslateTransform X="1" Y="1"/>
+                                </Viewbox.RenderTransform>
+                            </Viewbox>
                         </Button>
                     </StackPanel>
 
