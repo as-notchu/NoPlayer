@@ -65,6 +65,8 @@ public class AudioPlayerService : IDisposable
         var assemblyLocation = Assembly.GetExecutingAssembly().Location;
         var baseDir = Path.GetDirectoryName(assemblyLocation) ?? AppContext.BaseDirectory;
 
+        Console.WriteLine($"Initializing BASS from directory: {baseDir}");
+
         // Initialize BASS with default device
         if (!Bass.Init(-1, 44100, DeviceInitFlags.Default))
         {
@@ -75,14 +77,18 @@ public class AudioPlayerService : IDisposable
             }
         }
 
+        Console.WriteLine("BASS initialized successfully");
+
         // Load plugins for additional format support (platform-specific)
         if (OperatingSystem.IsWindows())
         {
+            Console.WriteLine("Loading Windows audio plugins...");
             LoadPlugin(baseDir, "bassflac.dll");
             LoadPlugin(baseDir, "basswebm.dll");
         }
         else if (OperatingSystem.IsMacOS())
         {
+            Console.WriteLine("Loading macOS audio plugins...");
             LoadPlugin(baseDir, "libbassflac.dylib");
             LoadPlugin(baseDir, "libbasswebm.dylib");
         }
@@ -95,7 +101,20 @@ public class AudioPlayerService : IDisposable
         var pluginPath = Path.Combine(baseDir, pluginName);
         if (File.Exists(pluginPath))
         {
-            Bass.PluginLoad(pluginPath);
+            var handle = Bass.PluginLoad(pluginPath);
+            if (handle == 0)
+            {
+                var error = Bass.LastError;
+                Console.WriteLine($"Warning: Failed to load plugin '{pluginName}': {error}");
+            }
+            else
+            {
+                Console.WriteLine($"Successfully loaded plugin: {pluginName}");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"Warning: Plugin not found: {pluginPath}");
         }
     }
 
@@ -128,6 +147,12 @@ public class AudioPlayerService : IDisposable
     {
         Stop();
 
+        // Verify file exists
+        if (!File.Exists(track.FilePath))
+        {
+            throw new InvalidOperationException($"File not found: '{track.FilePath}'");
+        }
+
         // Use Unicode flag on Windows to properly handle file paths with special characters
         var flags = OperatingSystem.IsWindows() ? BassFlags.Unicode : BassFlags.Default;
         _streamHandle = Bass.CreateStream(track.FilePath, 0, 0, flags);
@@ -135,7 +160,14 @@ public class AudioPlayerService : IDisposable
         if (_streamHandle == 0)
         {
             var error = Bass.LastError;
-            throw new InvalidOperationException($"Failed to create stream for '{track.FilePath}': {error}");
+            var errorMsg = error switch
+            {
+                Errors.FileFormat => $"Unsupported file format. The file may be corrupted or the required codec/plugin is missing.",
+                Errors.FileOpen => $"Could not open the file. It may be in use by another program.",
+                Errors.Format => $"Unsupported audio format.",
+                _ => $"Failed to load audio file: {error}"
+            };
+            throw new InvalidOperationException($"{errorMsg}\nFile: '{track.FilePath}'");
         }
 
         // Set volume
