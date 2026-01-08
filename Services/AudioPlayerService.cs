@@ -62,8 +62,8 @@ public class AudioPlayerService : IDisposable
         if (_bassInitialized) return;
 
         // Get the directory where the executable is located
-        var assemblyLocation = Assembly.GetExecutingAssembly().Location;
-        var baseDir = Path.GetDirectoryName(assemblyLocation) ?? AppContext.BaseDirectory;
+        // Use AppContext.BaseDirectory for single-file published apps
+        var baseDir = AppContext.BaseDirectory;
 
         Console.WriteLine($"Initializing BASS from directory: {baseDir}");
 
@@ -164,7 +164,6 @@ public class AudioPlayerService : IDisposable
             {
                 Errors.FileFormat => $"Unsupported file format. The file may be corrupted or the required codec/plugin is missing.",
                 Errors.FileOpen => $"Could not open the file. It may be in use by another program.",
-                Errors.Format => $"Unsupported audio format.",
                 _ => $"Failed to load audio file: {error}"
             };
             throw new InvalidOperationException($"{errorMsg}\nFile: '{track.FilePath}'");
