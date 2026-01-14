@@ -108,6 +108,85 @@ public class YouTubeDownloadService
         }
     }
 
+    public async Task DownloadVideosAsync(string videoUrls, string outputDirectory, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Ensure output directory exists
+            Directory.CreateDirectory(outputDirectory);
+
+            // Parse video URLs (separated by newlines or commas)
+            var urls = videoUrls
+                .Split(new[] { '\n', '\r', ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(u => u.Trim())
+                .Where(u => !string.IsNullOrWhiteSpace(u))
+                .ToList();
+
+            if (urls.Count == 0)
+            {
+                OnDownloadError(new DownloadErrorEventArgs("No valid video URLs provided.", null));
+                return;
+            }
+
+            OnProgressChanged(new DownloadProgressEventArgs($"Found {urls.Count} video URL(s) to download", 0, urls.Count, null));
+
+            // Download each video directly to the output directory
+            for (int i = 0; i < urls.Count; i++)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
+                var url = urls[i];
+                try
+                {
+                    // Parse video ID
+                    var videoId = VideoId.TryParse(url);
+                    if (videoId == null)
+                    {
+                        OnDownloadError(new DownloadErrorEventArgs($"Invalid video URL: {url}", null));
+                        continue;
+                    }
+
+                    // Get video metadata
+                    OnProgressChanged(new DownloadProgressEventArgs($"Fetching video information for {i + 1}/{urls.Count}...", i, urls.Count, null));
+                    var video = await _youtube.Videos.GetAsync(videoId.Value, cancellationToken);
+
+                    OnProgressChanged(new DownloadProgressEventArgs(
+                        $"Downloading {i + 1}/{urls.Count}: {video.Title}",
+                        i,
+                        urls.Count,
+                        video.Title));
+
+                    await DownloadVideoAsync(video, outputDirectory, cancellationToken);
+
+                    OnDownloadCompleted(new DownloadCompletedEventArgs(video.Title, i + 1, urls.Count));
+
+                    // Apply delay between downloads (except for the last one)
+                    if (i < urls.Count - 1)
+                    {
+                        OnProgressChanged(new DownloadProgressEventArgs(
+                            $"Waiting 10 seconds before next download... ({i + 1}/{urls.Count} completed)",
+                            i + 1,
+                            urls.Count,
+                            null));
+                        await Task.Delay(DelayBetweenDownloadsMs, cancellationToken);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    OnDownloadError(new DownloadErrorEventArgs($"Failed to download video from URL '{url}': {ex.Message}", null));
+                    // Continue with next video
+                }
+            }
+
+            OnProgressChanged(new DownloadProgressEventArgs($"All downloads completed! {urls.Count} song(s) downloaded to '{outputDirectory}'", urls.Count, urls.Count, null, outputDirectory));
+        }
+        catch (Exception ex)
+        {
+            OnDownloadError(new DownloadErrorEventArgs($"Video download failed: {ex.Message}", null));
+        }
+    }
+
     private async Task DownloadVideoAsync(IVideo video, string outputDirectory, CancellationToken cancellationToken)
     {
         var streamManifest = await _youtube.Videos.Streams.GetManifestAsync(video.Id, cancellationToken);

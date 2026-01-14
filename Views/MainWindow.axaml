@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:MusicPlayer.ViewModels"
         xmlns:models="using:MusicPlayer.Models"
+        xmlns:converters="using:MusicPlayer.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
@@ -12,6 +13,10 @@
         Width="1000" Height="700"
         MinWidth="800" MinHeight="500"
         Background="#1a1a2e">
+
+    <Window.Resources>
+        <converters:BoolToPlaylistBackgroundConverter x:Key="BoolToPlaylistBackgroundConverter"/>
+    </Window.Resources>
 
     <Window.Styles>
         <!-- Modern button style -->
@@ -234,7 +239,7 @@
                     <ListBox Grid.Row="3"
                              x:Name="TrackList"
                              ItemsSource="{Binding Tracks}"
-                             SelectedItem="{Binding CurrentTrack}"
+                             SelectedItem="{Binding CurrentTrack, Mode=OneWay}"
                              Background="Transparent"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              SelectionChanged="TrackList_SelectionChanged">
@@ -318,12 +323,14 @@
                         <ItemsControl ItemsSource="{Binding Playlists}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="models:Playlist">
-                                    <Border Background="Transparent"
-                                            Padding="12,10"
+                                    <Border Padding="12,10"
                                             Margin="0,0,0,8"
                                             CornerRadius="8"
                                             Cursor="Hand"
                                             PointerPressed="Playlist_Clicked">
+                                        <Border.Background>
+                                            <SolidColorBrush Color="{Binding IsSelected, Converter={StaticResource BoolToPlaylistBackgroundConverter}}"/>
+                                        </Border.Background>
                                         <Grid ColumnDefinitions="*,Auto">
                                             <StackPanel Grid.Column="0">
                                                 <TextBlock Text="{Binding Name}"

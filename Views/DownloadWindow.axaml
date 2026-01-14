@@ -80,27 +80,48 @@
         <vm:DownloadWindowViewModel/>
     </Design.DataContext>
 
-    <Grid Margin="24" RowDefinitions="Auto,Auto,Auto,Auto,*,Auto">
+    <Grid Margin="24" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto">
         <!-- Header -->
         <TextBlock Grid.Row="0"
-                   Text="YouTube Playlist Downloader"
+                   Text="YouTube Downloader"
                    FontSize="24"
                    FontWeight="Bold"
                    Foreground="#e8e8e8"
                    Margin="0,0,0,24"/>
 
-        <!-- YouTube URL Input -->
+        <!-- Download Mode Selection -->
         <StackPanel Grid.Row="1" Margin="0,0,0,16">
-            <TextBlock Text="YouTube Playlist URL"
+            <TextBlock Text="Download Mode"
+                       Foreground="#e8e8e8"
+                       FontSize="13"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,8"/>
+            <StackPanel Orientation="Horizontal" Spacing="20">
+                <RadioButton Content="Playlist"
+                             GroupName="DownloadMode"
+                             IsChecked="{Binding IsPlaylistMode}"
+                             Foreground="#e8e8e8"
+                             FontSize="13"/>
+                <RadioButton Content="Individual Song(s)"
+                             GroupName="DownloadMode"
+                             IsChecked="{Binding !IsPlaylistMode}"
+                             Foreground="#e8e8e8"
+                             FontSize="13"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- YouTube URL Input -->
+        <StackPanel Grid.Row="2" Margin="0,0,0,16">
+            <TextBlock Text="{Binding UrlLabelText}"
                        Foreground="#e8e8e8"
                        FontSize="13"
                        FontWeight="SemiBold"
                        Margin="0,0,0,8"/>
             <TextBox Classes="input-box"
                      Text="{Binding YoutubeUrl}"
-                     Watermark="https://www.youtube.com/playlist?list=... (Playlist URLs only)"
+                     Watermark="{Binding UrlWatermarkText}"
                      IsEnabled="{Binding !IsDownloading}"/>
-            <TextBlock Text="Note: Only playlist downloads are supported. Each playlist will be saved in its own folder."
+            <TextBlock Text="{Binding UrlHelperText}"
                        Foreground="#888"
                        FontSize="11"
                        Margin="0,6,0,0"
@@ -108,8 +129,8 @@
         </StackPanel>
 
         <!-- Output Directory -->
-        <StackPanel Grid.Row="2" Margin="0,0,0,16">
-            <TextBlock Text="Base Output Directory"
+        <StackPanel Grid.Row="3" Margin="0,0,0,16">
+            <TextBlock Text="Output Directory"
                        Foreground="#e8e8e8"
                        FontSize="13"
                        FontWeight="SemiBold"
@@ -126,14 +147,14 @@
                         Click="BrowseOutput_Click"
                         IsEnabled="{Binding !IsDownloading}"/>
             </Grid>
-            <TextBlock Text="A subfolder will be created for each playlist"
+            <TextBlock Text="{Binding OutputHelperText}"
                        Foreground="#666"
                        FontSize="11"
                        Margin="0,6,0,0"/>
         </StackPanel>
 
         <!-- Progress Info -->
-        <Border Grid.Row="3"
+        <Border Grid.Row="4"
                 Background="#16213e"
                 CornerRadius="12"
                 Padding="16"
@@ -181,7 +202,7 @@
         </Border>
 
         <!-- Download Log -->
-        <Border Grid.Row="4"
+        <Border Grid.Row="5"
                 Background="#16213e"
                 CornerRadius="12"
                 Padding="16"
@@ -222,7 +243,7 @@
         </Border>
 
         <!-- Action Buttons -->
-        <Grid Grid.Row="5" ColumnDefinitions="*,Auto,Auto,Auto">
+        <Grid Grid.Row="6" ColumnDefinitions="*,Auto,Auto,Auto">
             <StackPanel Grid.Column="0"
                         Orientation="Horizontal"
                         VerticalAlignment="Center">

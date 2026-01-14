@@ -353,6 +353,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void PlayNext()
     {
+        // Clear search to restore full playlist/library view
+        SearchText = string.Empty;
+
         if (Tracks.Count == 0) return;
 
         // If Repeat One is enabled, just replay the current track
@@ -416,6 +419,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void PlayPrevious()
     {
+        // Clear search to restore full playlist/library view
+        SearchText = string.Empty;
+
         if (Tracks.Count == 0) return;
 
         if (_audioPlayer.Time > 3000)
@@ -529,10 +535,23 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void SelectPlaylist(Playlist? playlist)
     {
+        // Clear selection from all playlists
+        foreach (var p in Playlists)
+        {
+            p.IsSelected = false;
+        }
+
         SelectedPlaylist = playlist;
+
+        // Reset shuffle history when switching playlists
+        _shuffleHistory.Clear();
+        _shuffleHistoryIndex = -1;
 
         if (playlist != null)
         {
+            // Mark the selected playlist
+            playlist.IsSelected = true;
+
             // Update tracks view to show only tracks from this playlist
             UpdateTracksCollection(playlist.Tracks);
             StatusMessage = $"Playlist: {playlist.Name} ({playlist.Tracks.Count} tracks)";
@@ -657,24 +676,36 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             if (SelectedPlaylist != null)
             {
                 UpdateTracksCollection(SelectedPlaylist.Tracks);
+                StatusMessage = $"Playlist: {SelectedPlaylist.Name} ({SelectedPlaylist.Tracks.Count} tracks)";
             }
             else
             {
                 UpdateTracksCollection(_allTracks);
+                StatusMessage = $"Showing all {_allTracks.Count} tracks";
             }
         }
         else
         {
-            // Search through all tracks using cached lowercase properties
+            // Search through selected playlist tracks or all tracks
             var searchLower = SearchText.ToLower();
-            var filtered = _allTracks.Where(t =>
+            IEnumerable<Track> sourceCollection = SelectedPlaylist != null ? SelectedPlaylist.Tracks : _allTracks;
+
+            var filtered = sourceCollection.Where(t =>
                 t.DisplayNameLower.Contains(searchLower) ||
                 t.DisplayArtistLower.Contains(searchLower) ||
                 t.DisplayAlbumLower.Contains(searchLower)
             ).ToList();
 
             UpdateTracksCollection(filtered);
-            StatusMessage = $"Found {filtered.Count} track(s)";
+
+            if (SelectedPlaylist != null)
+            {
+                StatusMessage = $"Found {filtered.Count} track(s) in '{SelectedPlaylist.Name}'";
+            }
+            else
+            {
+                StatusMessage = $"Found {filtered.Count} track(s)";
+            }
         }
     }
 
@@ -693,6 +724,12 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void ShowAllSongs()
     {
+        // Clear selection from all playlists
+        foreach (var p in Playlists)
+        {
+            p.IsSelected = false;
+        }
+
         SelectedPlaylist = null;
         CanRemoveFromPlaylist = false;
         SearchText = string.Empty;
