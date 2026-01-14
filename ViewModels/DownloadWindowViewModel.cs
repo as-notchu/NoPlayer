@@ -19,6 +19,13 @@ public partial class DownloadWindowViewModel : ViewModelBase, IDisposable
     private readonly SettingsService _settingsService;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UrlLabelText))]
+    [NotifyPropertyChangedFor(nameof(UrlWatermarkText))]
+    [NotifyPropertyChangedFor(nameof(UrlHelperText))]
+    [NotifyPropertyChangedFor(nameof(OutputHelperText))]
+    private bool _isPlaylistMode = true;
+
+    [ObservableProperty]
     private string _youtubeUrl = string.Empty;
 
     [ObservableProperty]
@@ -48,6 +55,20 @@ public partial class DownloadWindowViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private string _completedOutputDirectory = string.Empty;
 
+    public string UrlLabelText => IsPlaylistMode ? "YouTube Playlist URL" : "YouTube Video URL(s)";
+
+    public string UrlWatermarkText => IsPlaylistMode
+        ? "https://www.youtube.com/playlist?list=..."
+        : "https://www.youtube.com/watch?v=... (one per line or comma-separated)";
+
+    public string UrlHelperText => IsPlaylistMode
+        ? "The playlist will be saved in its own subfolder."
+        : "Enter one or more video URLs. You can paste multiple URLs separated by newlines or commas.";
+
+    public string OutputHelperText => IsPlaylistMode
+        ? "A subfolder will be created for the playlist"
+        : "Songs will be saved directly to this folder";
+
     public DownloadWindowViewModel()
     {
         _settingsService = new SettingsService();
@@ -67,7 +88,7 @@ public partial class DownloadWindowViewModel : ViewModelBase, IDisposable
     {
         if (string.IsNullOrWhiteSpace(YoutubeUrl))
         {
-            StatusMessage = "Please enter a YouTube playlist URL";
+            StatusMessage = IsPlaylistMode ? "Please enter a YouTube playlist URL" : "Please enter YouTube video URL(s)";
             return;
         }
 
@@ -77,12 +98,25 @@ public partial class DownloadWindowViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        // Validate that it's a playlist URL
-        if (!YoutubeUrl.Contains("playlist") && !YoutubeUrl.Contains("list="))
+        // Validate URL based on mode
+        if (IsPlaylistMode)
         {
-            StatusMessage = "Please provide a valid YouTube playlist URL (must contain 'playlist' or 'list=')";
-            AddLog("ERROR: Only playlist URLs are supported. Single video downloads are not allowed.");
-            return;
+            if (!YoutubeUrl.Contains("playlist") && !YoutubeUrl.Contains("list="))
+            {
+                StatusMessage = "Please provide a valid YouTube playlist URL (must contain 'playlist' or 'list=')";
+                AddLog("ERROR: Playlist mode requires a valid playlist URL.");
+                return;
+            }
+        }
+        else
+        {
+            // For individual mode, check if it looks like a video URL
+            if (!YoutubeUrl.Contains("youtube.com") && !YoutubeUrl.Contains("youtu.be"))
+            {
+                StatusMessage = "Please provide valid YouTube video URL(s)";
+                AddLog("ERROR: Please provide valid YouTube video URLs.");
+                return;
+            }
         }
 
         try
@@ -97,11 +131,22 @@ public partial class DownloadWindowViewModel : ViewModelBase, IDisposable
 
             _cancellationTokenSource = new CancellationTokenSource();
 
-            AddLog($"Starting playlist download from: {YoutubeUrl}");
-            AddLog($"Base output directory: {OutputDirectory}");
-            AddLog("A subdirectory will be created for this playlist");
+            if (IsPlaylistMode)
+            {
+                AddLog($"Starting playlist download from: {YoutubeUrl}");
+                AddLog($"Base output directory: {OutputDirectory}");
+                AddLog("A subdirectory will be created for this playlist");
 
-            await _downloadService.DownloadPlaylistAsync(YoutubeUrl, OutputDirectory, _cancellationTokenSource.Token);
+                await _downloadService.DownloadPlaylistAsync(YoutubeUrl, OutputDirectory, _cancellationTokenSource.Token);
+            }
+            else
+            {
+                AddLog($"Starting individual video download(s)");
+                AddLog($"Output directory: {OutputDirectory}");
+                AddLog("Songs will be saved directly to the output folder");
+
+                await _downloadService.DownloadVideosAsync(YoutubeUrl, OutputDirectory, _cancellationTokenSource.Token);
+            }
         }
         catch (Exception ex)
         {
