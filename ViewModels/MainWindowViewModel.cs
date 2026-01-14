@@ -353,6 +353,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void PlayNext()
     {
+        // Clear search to restore full playlist/library view
+        SearchText = string.Empty;
+
         if (Tracks.Count == 0) return;
 
         // If Repeat One is enabled, just replay the current track
@@ -416,6 +419,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void PlayPrevious()
     {
+        // Clear search to restore full playlist/library view
+        SearchText = string.Empty;
+
         if (Tracks.Count == 0) return;
 
         if (_audioPlayer.Time > 3000)
@@ -670,10 +676,12 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             if (SelectedPlaylist != null)
             {
                 UpdateTracksCollection(SelectedPlaylist.Tracks);
+                StatusMessage = $"Playlist: {SelectedPlaylist.Name} ({SelectedPlaylist.Tracks.Count} tracks)";
             }
             else
             {
                 UpdateTracksCollection(_allTracks);
+                StatusMessage = $"Showing all {_allTracks.Count} tracks";
             }
         }
         else
