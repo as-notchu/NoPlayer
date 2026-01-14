@@ -1,14 +1,18 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace MusicPlayer.Models;
 
-public class Playlist
+public partial class Playlist : ObservableObject
 {
     public string Name { get; set; } = string.Empty;
     public ObservableCollection<Track> Tracks { get; set; } = new();
     public bool IsDirectoryPlaylist { get; set; } // True if auto-created from a directory
     public string? DirectoryPath { get; set; } // Path if it's a directory playlist
+
+    [ObservableProperty]
+    private bool _isSelected;
 
     // HashSet for O(1) track existence checks to avoid O(n) .Any() calls
     private readonly HashSet<string> _trackFilePaths = new();

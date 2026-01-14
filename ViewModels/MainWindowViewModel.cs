@@ -529,10 +529,23 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void SelectPlaylist(Playlist? playlist)
     {
+        // Clear selection from all playlists
+        foreach (var p in Playlists)
+        {
+            p.IsSelected = false;
+        }
+
         SelectedPlaylist = playlist;
+
+        // Reset shuffle history when switching playlists
+        _shuffleHistory.Clear();
+        _shuffleHistoryIndex = -1;
 
         if (playlist != null)
         {
+            // Mark the selected playlist
+            playlist.IsSelected = true;
+
             // Update tracks view to show only tracks from this playlist
             UpdateTracksCollection(playlist.Tracks);
             StatusMessage = $"Playlist: {playlist.Name} ({playlist.Tracks.Count} tracks)";
@@ -665,16 +678,26 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
         else
         {
-            // Search through all tracks using cached lowercase properties
+            // Search through selected playlist tracks or all tracks
             var searchLower = SearchText.ToLower();
-            var filtered = _allTracks.Where(t =>
+            IEnumerable<Track> sourceCollection = SelectedPlaylist != null ? SelectedPlaylist.Tracks : _allTracks;
+
+            var filtered = sourceCollection.Where(t =>
                 t.DisplayNameLower.Contains(searchLower) ||
                 t.DisplayArtistLower.Contains(searchLower) ||
                 t.DisplayAlbumLower.Contains(searchLower)
             ).ToList();
 
             UpdateTracksCollection(filtered);
-            StatusMessage = $"Found {filtered.Count} track(s)";
+
+            if (SelectedPlaylist != null)
+            {
+                StatusMessage = $"Found {filtered.Count} track(s) in '{SelectedPlaylist.Name}'";
+            }
+            else
+            {
+                StatusMessage = $"Found {filtered.Count} track(s)";
+            }
         }
     }
 
