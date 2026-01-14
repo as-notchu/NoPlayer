@@ -724,6 +724,12 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void ShowAllSongs()
     {
+        // Clear selection from all playlists
+        foreach (var p in Playlists)
+        {
+            p.IsSelected = false;
+        }
+
         SelectedPlaylist = null;
         CanRemoveFromPlaylist = false;
         SearchText = string.Empty;
