@@ -239,7 +239,7 @@
                     <ListBox Grid.Row="3"
                              x:Name="TrackList"
                              ItemsSource="{Binding Tracks}"
-                             SelectedItem="{Binding CurrentTrack}"
+                             SelectedItem="{Binding CurrentTrack, Mode=OneWay}"
                              Background="Transparent"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              SelectionChanged="TrackList_SelectionChanged">
