@@ -2,8 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="MusicPlayer.App"
              xmlns:local="using:MusicPlayer"
-             RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+             RequestedThemeVariant="Dark">
+             <!-- Theme locked to "Dark" to prevent OS theme from affecting app appearance -->
 
     <Application.DataTemplates>
         <local:ViewLocator/>
