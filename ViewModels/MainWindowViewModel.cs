@@ -291,6 +291,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             UpdateTracksCollection(uniqueTracks);
             Playlists = new ObservableCollection<Playlist>(newPlaylists);
 
+            // Load custom playlists from settings
+            LoadCustomPlaylists();
+
             StatusMessage = $"Loaded {Tracks.Count} tracks from {directoriesToScan.Count} folder(s)";
         }
         catch (Exception ex)
@@ -530,6 +533,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         {
             track.IsSelected = false;
         }
+
+        // Save custom playlists
+        SaveCustomPlaylists();
     }
 
     [RelayCommand]
@@ -579,6 +585,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
                 _ = LoadLibraryAsync();
             }
             StatusMessage = $"Deleted playlist '{playlist.Name}'";
+
+            // Save custom playlists
+            SaveCustomPlaylists();
         }
     }
 
@@ -637,6 +646,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         {
             track.IsSelected = false;
         }
+
+        // Save custom playlists
+        SaveCustomPlaylists();
     }
 
     [RelayCommand]
@@ -660,6 +672,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             // Also remove from the current view
             Tracks.Remove(track);
             StatusMessage = $"Removed from '{SelectedPlaylist.Name}'";
+
+            // Save custom playlists
+            SaveCustomPlaylists();
         }
     }
 
@@ -743,6 +758,49 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         return time.TotalHours >= 1
             ? time.ToString(@"h\:mm\:ss")
             : time.ToString(@"m\:ss");
+    }
+
+    private void SaveCustomPlaylists()
+    {
+        var customPlaylists = Playlists
+            .Where(p => !p.IsDirectoryPlaylist)
+            .Select(p => new SavedPlaylist
+            {
+                Name = p.Name,
+                TrackPaths = p.Tracks.Select(t => t.FilePath).ToList()
+            })
+            .ToList();
+
+        _settingsService.UpdateCustomPlaylists(customPlaylists);
+    }
+
+    private void LoadCustomPlaylists()
+    {
+        var savedPlaylists = _settingsService.Settings.CustomPlaylists;
+
+        foreach (var savedPlaylist in savedPlaylists)
+        {
+            // Find tracks that match the saved paths
+            var playlistTracks = _allTracks
+                .Where(t => savedPlaylist.TrackPaths.Contains(t.FilePath))
+                .ToList();
+
+            // Only create playlist if it has at least one valid track
+            if (playlistTracks.Count > 0)
+            {
+                var playlist = new Playlist
+                {
+                    Name = savedPlaylist.Name,
+                    IsDirectoryPlaylist = false,
+                    Tracks = new ObservableCollection<Track>(playlistTracks)
+                };
+
+                // Rebuild the HashSet index for efficient lookups
+                playlist.RebuildTrackIndex();
+
+                Playlists.Add(playlist);
+            }
+        }
     }
 
     public void Dispose()
