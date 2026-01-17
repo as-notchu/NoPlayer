@@ -65,20 +65,23 @@ public partial class MainWindow : Window
             Width = 400,
             Height = 150,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            CanResize = false
+            CanResize = false,
+            Background = Avalonia.Media.Brushes.Black
         };
 
         var textBox = new TextBox
         {
             Watermark = "Playlist name...",
-            Margin = new Avalonia.Thickness(20)
+            Margin = new Avalonia.Thickness(20),
+            Classes = { "folder-input" }
         };
 
         var createButton = new Button
         {
             Content = "Create",
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
-            Margin = new Avalonia.Thickness(20, 0, 20, 20)
+            Margin = new Avalonia.Thickness(20, 0, 20, 20),
+            Classes = { "secondary-btn" }
         };
 
         createButton.Click += (s, args) =>
@@ -90,7 +93,10 @@ public partial class MainWindow : Window
             }
         };
 
-        var panel = new StackPanel();
+        var panel = new StackPanel
+        {
+            Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#1a1a2e"))
+        };
         panel.Children.Add(textBox);
         panel.Children.Add(createButton);
         dialog.Content = panel;
@@ -144,27 +150,33 @@ public partial class MainWindow : Window
             Width = 400,
             Height = 300,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            CanResize = false
+            CanResize = false,
+            Background = Avalonia.Media.Brushes.Black
         };
 
         var listBox = new ListBox
         {
             ItemsSource = customPlaylists,
-            Margin = new Avalonia.Thickness(20)
+            Margin = new Avalonia.Thickness(20),
+            Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#16213e")),
+            BorderBrush = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#0f3460")),
+            CornerRadius = new Avalonia.CornerRadius(8)
         };
 
         listBox.ItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<Models.Playlist>((playlist, _) =>
             new TextBlock
             {
                 Text = $"{playlist.Name} ({playlist.Tracks.Count} tracks)",
-                Padding = new Avalonia.Thickness(8)
+                Padding = new Avalonia.Thickness(8),
+                Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#e8e8e8"))
             });
 
         var addButton = new Button
         {
             Content = "Add",
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
-            Margin = new Avalonia.Thickness(20, 0, 20, 20)
+            Margin = new Avalonia.Thickness(20, 0, 20, 20),
+            Classes = { "secondary-btn" }
         };
 
         addButton.Click += (s, args) =>
@@ -176,7 +188,10 @@ public partial class MainWindow : Window
             }
         };
 
-        var panel = new StackPanel();
+        var panel = new StackPanel
+        {
+            Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#1a1a2e"))
+        };
         panel.Children.Add(listBox);
         panel.Children.Add(addButton);
         dialog.Content = panel;
