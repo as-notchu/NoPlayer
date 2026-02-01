@@ -14,9 +14,12 @@ public class MediaKeyService : IDisposable
     private bool _disposed;
     private bool _isPlaying;
     private CancellationTokenSource? _cts;
+    private Task? _messageLoopTask;
     private IntPtr _eventTap;
     private IntPtr _runLoopSource;
     private IntPtr _runLoop;
+    private IntPtr _mediaPlayerHandle;
+    private IntPtr _coreFoundationHandle;
     private GCHandle _callbackHandle;
 
     // Windows-specific
@@ -103,6 +106,9 @@ public class MediaKeyService : IDisposable
 
     [DllImport("/usr/lib/libobjc.A.dylib")]
     private static extern IntPtr dlopen(string path, int mode);
+
+    [DllImport("/usr/lib/libobjc.A.dylib")]
+    private static extern int dlclose(IntPtr handle);
 
     private const int RTLD_LAZY = 1;
     private const int RTLD_NOW = 2;
@@ -206,9 +212,9 @@ public class MediaKeyService : IDisposable
 
     private void InitializeMacOS()
     {
-        // Load MediaPlayer framework
-        var mediaPlayerHandle = dlopen("/System/Library/Frameworks/MediaPlayer.framework/MediaPlayer", RTLD_NOW);
-        if (mediaPlayerHandle == IntPtr.Zero)
+        // Load MediaPlayer framework and store handle for cleanup
+        _mediaPlayerHandle = dlopen("/System/Library/Frameworks/MediaPlayer.framework/MediaPlayer", RTLD_NOW);
+        if (_mediaPlayerHandle == IntPtr.Zero)
         {
             Console.WriteLine("Warning: Could not load MediaPlayer framework");
         }
@@ -243,7 +249,7 @@ public class MediaKeyService : IDisposable
 
         _cts = new CancellationTokenSource();
 
-        Task.Run(() =>
+        _messageLoopTask = Task.Run(() =>
         {
             try
             {
@@ -367,7 +373,7 @@ public class MediaKeyService : IDisposable
         _callbackHandle = GCHandle.Alloc(_callback);
         _cts = new CancellationTokenSource();
 
-        Task.Run(() =>
+        _messageLoopTask = Task.Run(() =>
         {
             try
             {
@@ -392,6 +398,9 @@ public class MediaKeyService : IDisposable
                 if (_runLoopSource == IntPtr.Zero)
                 {
                     Console.WriteLine("Failed to create run loop source");
+                    // Clean up event tap if run loop source creation fails
+                    CFRelease(_eventTap);
+                    _eventTap = IntPtr.Zero;
                     return;
                 }
 
@@ -415,11 +424,12 @@ public class MediaKeyService : IDisposable
         }, _cts.Token);
     }
 
-    private static IntPtr GetCFRunLoopCommonModes()
+    private IntPtr GetCFRunLoopCommonModes()
     {
         // kCFRunLoopCommonModes is a global symbol
-        var handle = NativeLibrary.Load("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation");
-        var ptr = NativeLibrary.GetExport(handle, "kCFRunLoopCommonModes");
+        // Store the handle for cleanup
+        _coreFoundationHandle = NativeLibrary.Load("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation");
+        var ptr = NativeLibrary.GetExport(_coreFoundationHandle, "kCFRunLoopCommonModes");
         return Marshal.ReadIntPtr(ptr);
     }
 
@@ -611,21 +621,82 @@ public class MediaKeyService : IDisposable
 
         _cts?.Cancel();
 
+        // Stop the run loop first to allow the background task to exit
         if (_runLoop != IntPtr.Zero)
         {
             CFRunLoopStop(_runLoop);
         }
 
-        if (_eventTap != IntPtr.Zero)
+        // Wait for the background task to complete with a timeout
+        try
         {
-            CGEventTapEnable(_eventTap, false);
+            _messageLoopTask?.Wait(TimeSpan.FromSeconds(2));
+        }
+        catch (AggregateException)
+        {
+            // Task was cancelled or failed, which is expected during shutdown
         }
 
-        if (_callbackHandle.IsAllocated)
+        // Clean up macOS resources
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            _callbackHandle.Free();
+            // Remove the run loop source before releasing
+            if (_runLoopSource != IntPtr.Zero && _runLoop != IntPtr.Zero)
+            {
+                var commonModes = IntPtr.Zero;
+                try
+                {
+                    if (_coreFoundationHandle != IntPtr.Zero)
+                    {
+                        var ptr = NativeLibrary.GetExport(_coreFoundationHandle, "kCFRunLoopCommonModes");
+                        commonModes = Marshal.ReadIntPtr(ptr);
+                    }
+                }
+                catch { /* Ignore errors getting common modes during cleanup */ }
+
+                if (commonModes != IntPtr.Zero)
+                {
+                    CFRunLoopRemoveSource(_runLoop, _runLoopSource, commonModes);
+                }
+            }
+
+            // Disable and release the event tap
+            if (_eventTap != IntPtr.Zero)
+            {
+                CGEventTapEnable(_eventTap, false);
+                CFRelease(_eventTap);
+                _eventTap = IntPtr.Zero;
+            }
+
+            // Release the run loop source
+            if (_runLoopSource != IntPtr.Zero)
+            {
+                CFRelease(_runLoopSource);
+                _runLoopSource = IntPtr.Zero;
+            }
+
+            // Free the GC handle for the callback
+            if (_callbackHandle.IsAllocated)
+            {
+                _callbackHandle.Free();
+            }
+
+            // Close the MediaPlayer framework handle
+            if (_mediaPlayerHandle != IntPtr.Zero)
+            {
+                dlclose(_mediaPlayerHandle);
+                _mediaPlayerHandle = IntPtr.Zero;
+            }
+
+            // Free the CoreFoundation library handle
+            if (_coreFoundationHandle != IntPtr.Zero)
+            {
+                NativeLibrary.Free(_coreFoundationHandle);
+                _coreFoundationHandle = IntPtr.Zero;
+            }
         }
 
+        _runLoop = IntPtr.Zero;
         _cts?.Dispose();
     }
 }

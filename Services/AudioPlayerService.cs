@@ -11,6 +11,7 @@ namespace MusicPlayer.Services;
 public class AudioPlayerService : IDisposable
 {
     private int _streamHandle;
+    private int _endSyncHandle;
     private readonly Timer _positionTimer;
     private bool _disposed;
     private bool _bassInitialized;
@@ -207,8 +208,8 @@ public class AudioPlayerService : IDisposable
         // Set volume
         Bass.ChannelSetAttribute(_streamHandle, ChannelAttribute.Volume, _volume / 100.0);
 
-        // Set up end sync to detect when playback finishes
-        Bass.ChannelSetSync(_streamHandle, SyncFlags.End, 0, OnPlaybackEnd);
+        // Set up end sync to detect when playback finishes and store the handle for cleanup
+        _endSyncHandle = Bass.ChannelSetSync(_streamHandle, SyncFlags.End, 0, OnPlaybackEnd);
 
         if (Bass.ChannelPlay(_streamHandle))
         {
@@ -251,6 +252,13 @@ public class AudioPlayerService : IDisposable
 
         if (_streamHandle != 0)
         {
+            // Remove the sync callback before freeing the stream to prevent leaks
+            if (_endSyncHandle != 0)
+            {
+                Bass.ChannelRemoveSync(_streamHandle, _endSyncHandle);
+                _endSyncHandle = 0;
+            }
+
             Bass.ChannelStop(_streamHandle);
             Bass.StreamFree(_streamHandle);
             _streamHandle = 0;
