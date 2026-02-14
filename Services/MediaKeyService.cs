@@ -568,26 +568,51 @@ public class MediaKeyService : IDisposable
             var initSel = sel_registerName("init");
             var dict = objc_msgSend(objc_msgSend(dictClass, allocSel), initSel);
 
-            // Use NSString keys - simpler approach
-            SetDictionaryValue(dict, CreateNSString("kMPMediaItemPropertyTitle"), CreateNSString(title));
-            SetDictionaryValue(dict, CreateNSString("kMPMediaItemPropertyArtist"), CreateNSString(artist ?? "Unknown"));
-
-            if (duration > 0)
+            try
             {
-                var nsNumberClass = objc_getClass("NSNumber");
-                var durationNum = objc_msgSend_Double(nsNumberClass, sel_registerName("numberWithDouble:"), duration);
-                var currentTimeNum = objc_msgSend_Double(nsNumberClass, sel_registerName("numberWithDouble:"), currentTime);
-                var rateNum = objc_msgSend_Double(nsNumberClass, sel_registerName("numberWithDouble:"), _isPlaying ? 1.0 : 0.0);
+  
+                var titleKey = CreateNSString("kMPMediaItemPropertyTitle");
+                var titleValue = CreateNSString(title);
+                SetDictionaryValue(dict, titleKey, titleValue);
+                CFRelease(titleKey);
+                CFRelease(titleValue);
 
-                SetDictionaryValue(dict, CreateNSString("kMPMediaItemPropertyPlaybackDuration"), durationNum);
-                SetDictionaryValue(dict, CreateNSString("kMPNowPlayingInfoPropertyElapsedPlaybackTime"), currentTimeNum);
-                SetDictionaryValue(dict, CreateNSString("kMPNowPlayingInfoPropertyPlaybackRate"), rateNum);
+                var artistKey = CreateNSString("kMPMediaItemPropertyArtist");
+                var artistValue = CreateNSString(artist ?? "Unknown");
+                SetDictionaryValue(dict, artistKey, artistValue);
+                CFRelease(artistKey);
+                CFRelease(artistValue);
+
+                if (duration > 0)
+                {
+                    var nsNumberClass = objc_getClass("NSNumber");
+                    var durationNum = objc_msgSend_Double(nsNumberClass, sel_registerName("numberWithDouble:"), duration);
+                    var currentTimeNum = objc_msgSend_Double(nsNumberClass, sel_registerName("numberWithDouble:"), currentTime);
+                    var rateNum = objc_msgSend_Double(nsNumberClass, sel_registerName("numberWithDouble:"), _isPlaying ? 1.0 : 0.0);
+
+                    var durationKey = CreateNSString("kMPMediaItemPropertyPlaybackDuration");
+                    SetDictionaryValue(dict, durationKey, durationNum);
+                    CFRelease(durationKey);
+
+                    var elapsedKey = CreateNSString("kMPNowPlayingInfoPropertyElapsedPlaybackTime");
+                    SetDictionaryValue(dict, elapsedKey, currentTimeNum);
+                    CFRelease(elapsedKey);
+
+                    var rateKey = CreateNSString("kMPNowPlayingInfoPropertyPlaybackRate");
+                    SetDictionaryValue(dict, rateKey, rateNum);
+                    CFRelease(rateKey);
+                }
+
+                var setNowPlayingInfoSel = sel_registerName("setNowPlayingInfo:");
+                objc_msgSend_IntPtr(infoCenter, setNowPlayingInfoSel, dict);
+
+                Console.WriteLine($"Now playing info updated: {title} - {artist}");
             }
+            finally
+            {
 
-            var setNowPlayingInfoSel = sel_registerName("setNowPlayingInfo:");
-            objc_msgSend_IntPtr(infoCenter, setNowPlayingInfoSel, dict);
-
-            Console.WriteLine($"Now playing info updated: {title} - {artist}");
+                CFRelease(dict);
+            }
         }
         catch (Exception ex)
         {
@@ -621,26 +646,25 @@ public class MediaKeyService : IDisposable
 
         _cts?.Cancel();
 
-        // Stop the run loop first to allow the background task to exit
+   
         if (_runLoop != IntPtr.Zero)
         {
             CFRunLoopStop(_runLoop);
         }
 
-        // Wait for the background task to complete with a timeout
         try
         {
             _messageLoopTask?.Wait(TimeSpan.FromSeconds(2));
         }
         catch (AggregateException)
         {
-            // Task was cancelled or failed, which is expected during shutdown
+
         }
 
-        // Clean up macOS resources
+
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            // Remove the run loop source before releasing
+  
             if (_runLoopSource != IntPtr.Zero && _runLoop != IntPtr.Zero)
             {
                 var commonModes = IntPtr.Zero;
