@@ -348,14 +348,19 @@
 
                 <Grid Grid.Row="1" ColumnDefinitions="*,Auto,*">
 
-                    <!-- Now playing -->
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                        <Border Width="46" Height="46" CornerRadius="10" Background="{StaticResource Bg2Brush}">
+                    <!-- Now playing. A Grid (not a StackPanel) so the text column is capped at the
+                         remaining width and long titles get trimmed instead of running under the buttons. -->
+                    <Grid Grid.Column="0" ColumnDefinitions="Auto,*" VerticalAlignment="Center" Margin="0,0,16,0">
+                        <Border Grid.Column="0" Width="46" Height="46" CornerRadius="10" Background="{StaticResource Bg2Brush}">
                             <PathIcon Data="{StaticResource IconMusic}"
                                       Width="20" Height="20"
                                       Foreground="{StaticResource AccentBrush}"/>
                         </Border>
-                        <StackPanel VerticalAlignment="Center" MaxWidth="320">
+                        <StackPanel Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Left"
+                                    MaxWidth="320"
+                                    Margin="12,0,0,0">
                             <TextBlock Text="{Binding CurrentTrack.DisplayName, FallbackValue='Nothing playing'}"
                                        FontSize="14"
                                        FontWeight="SemiBold"
@@ -374,7 +379,7 @@
                                 <Run Text="{Binding UpNextTrack.DisplayName, FallbackValue=''}"/>
                             </TextBlock>
                         </StackPanel>
-                    </StackPanel>
+                    </Grid>
 
                     <!-- Transport -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
