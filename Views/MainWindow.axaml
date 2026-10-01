@@ -2,534 +2,452 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:MusicPlayer.ViewModels"
         xmlns:models="using:MusicPlayer.Models"
-        xmlns:converters="using:MusicPlayer.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="720"
         x:Class="MusicPlayer.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/icon2.ico"
         Title="NoPlayer"
-        Width="1000" Height="700"
-        MinWidth="800" MinHeight="500"
-        Background="#1a1a2e">
-
-    <Window.Resources>
-        <converters:BoolToPlaylistBackgroundConverter x:Key="BoolToPlaylistBackgroundConverter"/>
-    </Window.Resources>
-
-    <Window.Styles>
-        <!-- Modern button style -->
-        <Style Selector="Button.control-btn">
-            <Setter Property="Background" Value="#16213e"/>
-            <Setter Property="Foreground" Value="#e8e8e8"/>
-            <Setter Property="CornerRadius" Value="25"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-        <Style Selector="Button.control-btn:pointerover">
-            <Setter Property="Background" Value="#0f3460"/>
-        </Style>
-        <Style Selector="Button.control-btn:pressed">
-            <Setter Property="Background" Value="#533483"/>
-        </Style>
-
-        <!-- Play button accent -->
-        <Style Selector="Button.play-btn">
-            <Setter Property="Background" Value="#e94560"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="CornerRadius" Value="35"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-        <Style Selector="Button.play-btn:pointerover">
-            <Setter Property="Background" Value="#ff6b6b"/>
-        </Style>
-        <Style Selector="Button.play-btn:pressed">
-            <Setter Property="Background" Value="#c73e54"/>
-        </Style>
-
-        <!-- Toggle button style -->
-        <Style Selector="ToggleButton.mode-btn">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#888"/>
-            <Setter Property="CornerRadius" Value="12"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#333"/>
-            <Setter Property="Padding" Value="10,5"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-        <Style Selector="ToggleButton.mode-btn:checked">
-            <Setter Property="Background" Value="#e94560"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#e94560"/>
-        </Style>
-        <Style Selector="ToggleButton.mode-btn:pointerover">
-            <Setter Property="BorderBrush" Value="#e94560"/>
-        </Style>
-
-        <!-- Modern text box -->
-        <Style Selector="TextBox.folder-input">
-            <Setter Property="Background" Value="#16213e"/>
-            <Setter Property="Foreground" Value="#e8e8e8"/>
-            <Setter Property="BorderBrush" Value="#0f3460"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="12,8"/>
-        </Style>
-
-        <!-- Secondary button -->
-        <Style Selector="Button.secondary-btn">
-            <Setter Property="Background" Value="#0f3460"/>
-            <Setter Property="Foreground" Value="#e8e8e8"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="16,8"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-        <Style Selector="Button.secondary-btn:pointerover">
-            <Setter Property="Background" Value="#533483"/>
-        </Style>
-
-        <!-- Track list item -->
-        <Style Selector="ListBoxItem">
-            <Setter Property="Padding" Value="16,12"/>
-            <Setter Property="Margin" Value="0,2"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Background" Value="Transparent"/>
-        </Style>
-        <Style Selector="ListBoxItem:pointerover">
-            <Setter Property="Background" Value="#16213e"/>
-        </Style>
-        <Style Selector="ListBoxItem:selected">
-            <Setter Property="Background" Value="#0f3460"/>
-        </Style>
-
-        <!-- Track text colors (default state) -->
-        <Style Selector="TextBlock.title-text">
-            <Setter Property="Foreground" Value="#e8e8e8"/>
-        </Style>
-        <Style Selector="TextBlock.artist-text">
-            <Setter Property="Foreground" Value="#888"/>
-        </Style>
-        <Style Selector="TextBlock.album-text">
-            <Setter Property="Foreground" Value="#888"/>
-        </Style>
-        <Style Selector="TextBlock.duration-text">
-            <Setter Property="Foreground" Value="#666"/>
-        </Style>
-
-        <!-- Selected track text colors -->
-        <Style Selector="ListBoxItem:selected TextBlock.title-text">
-            <Setter Property="Foreground" Value="#faffad"/>
-        </Style>
-        <Style Selector="ListBoxItem:selected TextBlock.artist-text">
-            <Setter Property="Foreground" Value="White"/>
-        </Style>
-        <Style Selector="ListBoxItem:selected TextBlock.album-text">
-            <Setter Property="Foreground" Value="White"/>
-        </Style>
-        <Style Selector="ListBoxItem:selected TextBlock.duration-text">
-            <Setter Property="Foreground" Value="White"/>
-        </Style>
-
-        <!-- Slider styling -->
-        <Style Selector="Slider">
-            <Setter Property="Foreground" Value="#e94560"/>
-        </Style>
-    </Window.Styles>
+        Width="1100" Height="720"
+        MinWidth="860" MinHeight="560">
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto,*,Auto">
-        <!-- Top Bar - Music Folder Settings -->
-        <Border Grid.Row="0" Background="#16213e" Padding="20,16" CornerRadius="0,0,16,16">
-            <Grid RowDefinitions="Auto,Auto">
-                <!-- First Row: Folder Path -->
-                <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,0,0,12">
-                    <TextBox Grid.Column="0"
-                             Classes="folder-input"
-                             Text="{Binding MusicFolderPath}"
-                             Watermark="Select your music folder..."
-                             IsReadOnly="True"/>
-                    <Button Grid.Column="1"
-                            Classes="secondary-btn"
-                            Content="Browse"
-                            Margin="12,0,0,0"
-                            Click="BrowseFolder_Click"/>
-                    <Button Grid.Column="2"
-                            Classes="secondary-btn"
-                            Content="Refresh"
-                            Margin="8,0,0,0"
-                            Command="{Binding LoadLibraryCommand}"
-                            IsEnabled="{Binding !IsLoading}"/>
-                    <Button Grid.Column="3"
-                            Classes="secondary-btn"
-                            Content="Download from YouTube"
-                            Margin="8,0,0,0"
-                            Click="OpenDownloadWindow_Click"
-                            ToolTip.Tip="Download music from YouTube playlists"/>
-                </Grid>
+    <Grid RowDefinitions="*,Auto">
 
-                <!-- Second Row: Multi-directory paths input -->
-                <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
-                    <TextBox Grid.Column="0"
-                             x:Name="DirectoriesTextBox"
-                             Classes="folder-input"
-                             AcceptsReturn="False"
-                             Watermark="Add music directories (comma or newline separated): /path/to/music1, /path/to/music2"
-                             TextWrapping="Wrap"
-                             MinHeight="40"/>
-                    <Button Grid.Column="1"
-                            Classes="secondary-btn"
-                            Content="Add Directories"
-                            Margin="12,0,0,0"
-                            Click="AddDirectories_Click"/>
-                </Grid>
-            </Grid>
-        </Border>
+        <!-- Sidebar + content -->
+        <Grid Grid.Row="0" ColumnDefinitions="252,*">
 
-        <!-- Main Content Area: Track List + Playlists -->
-        <Grid Grid.Row="1" Margin="20,16" ColumnDefinitions="60*,40*">
-            <!-- Track List -->
-            <Border Grid.Column="0" Margin="0,0,10,0">
-                <Grid RowDefinitions="Auto,Auto,Auto,*">
-                    <!-- Header with Show All button -->
-                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
-                        <TextBlock Grid.Column="0"
-                                   Text="Library"
-                                   FontSize="24"
-                                   FontWeight="Bold"
-                                   Foreground="#e8e8e8"/>
-                        <Button Grid.Column="1"
-                                Classes="secondary-btn"
-                                Content="Show All Songs"
-                                Command="{Binding ShowAllSongsCommand}"
-                                FontSize="12"
-                                Padding="12,6"/>
-                    </Grid>
+            <!-- Sidebar -->
+            <Border Grid.Column="0"
+                    Background="{StaticResource Bg1Brush}"
+                    BorderBrush="{StaticResource LineBrush}"
+                    BorderThickness="0,0,1,0">
+                <Grid RowDefinitions="Auto,Auto,*,Auto">
 
-                    <!-- Search Box -->
-                    <TextBox Grid.Row="1"
-                             Classes="folder-input"
-                             Text="{Binding SearchText}"
-                             Watermark="Search songs..."
-                             Margin="0,0,0,12"/>
-
-                    <!-- Selection Actions -->
-                    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
-                        <Button Classes="secondary-btn"
-                                Content="Create Playlist"
-                                Click="CreatePlaylist_Click"
-                                FontSize="12"
-                                Padding="12,6"/>
-                        <Button Classes="secondary-btn"
-                                Content="Add to Playlist"
-                                Click="AddToPlaylist_Click"
-                                FontSize="12"
-                                Padding="12,6"/>
-                        <TextBlock Text="{Binding StatusMessage}"
-                                   VerticalAlignment="Center"
-                                   Foreground="#888"
-                                   FontSize="12"
-                                   Margin="12,0,0,0"/>
+                    <!-- Brand -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="20,20,20,18">
+                        <Border Width="32" Height="32" CornerRadius="10" Background="{StaticResource AccentBrush}">
+                            <PathIcon Data="{StaticResource IconMusic}" Width="16" Height="16" Foreground="White"/>
+                        </Border>
+                        <TextBlock Text="NoPlayer" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
 
-                    <ListBox Grid.Row="3"
-                             x:Name="TrackList"
-                             ItemsSource="{Binding Tracks}"
-                             SelectedItem="{Binding CurrentTrack, Mode=OneWay}"
-                             Background="Transparent"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                             SelectionChanged="TrackList_SelectionChanged">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="models:Track">
-                                <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
-                                    <!-- Selection Checkbox -->
-                                    <CheckBox Grid.Column="0"
-                                              IsChecked="{Binding IsSelected}"
-                                              VerticalAlignment="Center"
-                                              Margin="0,0,12,0"/>
+                    <!-- Library -->
+                    <StackPanel Grid.Row="1" Margin="12,0,12,0">
+                        <TextBlock Classes="section-label" Text="LIBRARY" Margin="12,0,0,6"/>
+                        <Button Classes="nav"
+                                Classes.selected="{Binding SelectedPlaylist, Converter={x:Static ObjectConverters.IsNull}}"
+                                Command="{Binding ShowAllSongsCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <PathIcon Data="{StaticResource IconLibrary}"/>
+                                <TextBlock Text="All songs" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
 
-                                    <!-- Play indicator -->
-                                    <Border Grid.Column="1"
-                                            Width="4" Height="40"
-                                            CornerRadius="2"
-                                            Background="#e94560"
-                                            Margin="0,0,12,0"
-                                            IsVisible="False"/>
+                    <!-- Playlists -->
+                    <Grid Grid.Row="2" RowDefinitions="Auto,*" Margin="12,16,12,0">
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="12,0,0,6">
+                            <TextBlock Classes="section-label" Text="PLAYLISTS" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1"
+                                    Classes="icon small"
+                                    Click="CreatePlaylist_Click"
+                                    ToolTip.Tip="New playlist from the checked songs">
+                                <PathIcon Data="{StaticResource IconPlus}"/>
+                            </Button>
+                        </Grid>
 
-                                    <!-- Track info -->
-                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding DisplayName}"
-                                                   Classes="title-text"
-                                                   FontSize="15"
-                                                   FontWeight="SemiBold"
-                                                   TextTrimming="CharacterEllipsis"/>
-                                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                            <TextBlock Text="{Binding DisplayArtist}"
-                                                       Classes="artist-text"
-                                                       FontSize="13"/>
-                                            <TextBlock Text=" - "
-                                                       FontSize="13"
-                                                       Foreground="#666"/>
-                                            <TextBlock Text="{Binding DisplayAlbum}"
-                                                       Classes="album-text"
-                                                       FontSize="13"
-                                                       TextTrimming="CharacterEllipsis"/>
-                                        </StackPanel>
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Playlists}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:Playlist">
+                                        <Border Classes="nav-item"
+                                                Classes.selected="{Binding IsSelected}"
+                                                Margin="0,0,0,2"
+                                                PointerPressed="Playlist_Clicked"
+                                                ToolTip.Tip="{Binding DirectoryPath}">
+                                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                                <PathIcon Grid.Column="0"
+                                                          Data="{StaticResource IconFolder}"
+                                                          IsVisible="{Binding IsDirectoryPlaylist}"
+                                                          Margin="0,0,10,0"/>
+                                                <PathIcon Grid.Column="0"
+                                                          Data="{StaticResource IconPlaylist}"
+                                                          IsVisible="{Binding !IsDirectoryPlaylist}"
+                                                          Margin="0,0,10,0"/>
+
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Classes="nav-title"
+                                                               Text="{Binding Name}"
+                                                               FontSize="13"
+                                                               FontWeight="Medium"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Classes="muted" FontSize="11" Margin="0,1,0,0">
+                                                        <Run Text="{Binding Tracks.Count}"/>
+                                                        <Run Text="tracks"/>
+                                                    </TextBlock>
+                                                </StackPanel>
+
+                                                <!-- Delete custom playlist (single click) -->
+                                                <Button Grid.Column="2"
+                                                        Classes="icon small row-action"
+                                                        IsVisible="{Binding !IsDirectoryPlaylist}"
+                                                        Click="DeletePlaylist_Click"
+                                                        Tag="{Binding}"
+                                                        ToolTip.Tip="Delete playlist">
+                                                    <PathIcon Data="{StaticResource IconClose}"/>
+                                                </Button>
+                                                <!-- Remove folder (double click, so it is hard to do by accident) -->
+                                                <Button Grid.Column="2"
+                                                        Classes="icon small row-action"
+                                                        IsVisible="{Binding IsDirectoryPlaylist}"
+                                                        DoubleTapped="DeleteDirectoryPlaylist_DoubleTapped"
+                                                        Tag="{Binding}"
+                                                        ToolTip.Tip="Double-click to remove this folder from the library">
+                                                    <PathIcon Data="{StaticResource IconClose}"/>
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+
+                    <!-- Sources -->
+                    <Border Grid.Row="3"
+                            BorderBrush="{StaticResource LineBrush}"
+                            BorderThickness="0,1,0,0"
+                            Padding="20,14,20,16">
+                        <StackPanel Spacing="8">
+                            <TextBlock Classes="section-label" Text="SOURCES" Margin="0,0,0,2"/>
+
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBox Grid.Column="0"
+                                         Classes="input compact"
+                                         Text="{Binding MusicFolderPath}"
+                                         Watermark="Main music folder"
+                                         IsReadOnly="True"
+                                         ToolTip.Tip="{Binding MusicFolderPath}"/>
+                                <Button Grid.Column="1"
+                                        Classes="icon"
+                                        Margin="6,0,0,0"
+                                        Width="32" Height="32"
+                                        Click="BrowseFolder_Click"
+                                        ToolTip.Tip="Choose main music folder">
+                                    <PathIcon Data="{StaticResource IconFolder}" Width="15" Height="15"/>
+                                </Button>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBox Grid.Column="0"
+                                         x:Name="DirectoriesTextBox"
+                                         Classes="input compact"
+                                         AcceptsReturn="False"
+                                         Watermark="Paste folder paths"
+                                         ToolTip.Tip="Paste one or more folder paths, separated by commas"/>
+                                <Button Grid.Column="1"
+                                        Classes="icon"
+                                        Margin="6,0,0,0"
+                                        Width="32" Height="32"
+                                        Click="AddDirectories_Click"
+                                        ToolTip.Tip="Add folders to the library">
+                                    <PathIcon Data="{StaticResource IconPlus}" Width="15" Height="15"/>
+                                </Button>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
+                                <Button Grid.Column="0"
+                                        Classes="secondary"
+                                        HorizontalAlignment="Stretch"
+                                        Margin="0,0,4,0"
+                                        Command="{Binding LoadLibraryCommand}"
+                                        IsEnabled="{Binding !IsLoading}">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <PathIcon Data="{StaticResource IconRefresh}"/>
+                                        <TextBlock Text="Rescan" FontSize="12" VerticalAlignment="Center"/>
                                     </StackPanel>
-
-                                    <!-- Duration -->
-                                    <TextBlock Grid.Column="3"
-                                               Classes="duration-text"
-                                               Text="{Binding DurationFormatted}"
-                                               VerticalAlignment="Center"
-                                               FontSize="13"
-                                               Margin="16,0,0,0"/>
-
-                                    <!-- Remove from playlist button (only for custom playlists) -->
-                                    <Button Grid.Column="4"
-                                            Content="−"
-                                            Classes="control-btn"
-                                            Width="24" Height="24"
-                                            FontSize="16"
-                                            Padding="0"
-                                            Margin="8,0,0,0"
-                                            Click="RemoveFromPlaylist_Click"
-                                            Tag="{Binding}"
-                                            IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).CanRemoveFromPlaylist}"
-                                            HorizontalContentAlignment="Center"
-                                            VerticalContentAlignment="Center"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                                </Button>
+                                <Button Grid.Column="1"
+                                        Classes="secondary"
+                                        HorizontalAlignment="Stretch"
+                                        Margin="4,0,0,0"
+                                        Click="OpenDownloadWindow_Click"
+                                        ToolTip.Tip="Download music from YouTube">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <PathIcon Data="{StaticResource IconDownload}"/>
+                                        <TextBlock Text="YouTube" FontSize="12" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
                 </Grid>
             </Border>
 
-            <!-- Playlists Panel -->
-            <Border Grid.Column="1" Background="#16213e" CornerRadius="12" Padding="16" Margin="10,0,0,0">
-                <Grid RowDefinitions="Auto,*">
-                    <TextBlock Grid.Row="0"
-                               Text="Playlists"
-                               FontSize="20"
-                               FontWeight="Bold"
-                               Foreground="#e8e8e8"
-                               Margin="0,0,0,16"/>
+            <!-- Content -->
+            <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*" Margin="28,24,28,0">
 
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                        <ItemsControl ItemsSource="{Binding Playlists}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="models:Playlist">
-                                    <Border Padding="12,10"
-                                            Margin="0,0,0,8"
-                                            CornerRadius="8"
-                                            Cursor="Hand"
-                                            PointerPressed="Playlist_Clicked">
-                                        <Border.Background>
-                                            <SolidColorBrush Color="{Binding IsSelected, Converter={StaticResource BoolToPlaylistBackgroundConverter}}"/>
-                                        </Border.Background>
-                                        <Grid ColumnDefinitions="*,Auto">
-                                            <StackPanel Grid.Column="0">
-                                                <TextBlock Text="{Binding Name}"
-                                                           FontSize="14"
-                                                           FontWeight="SemiBold"
-                                                           Foreground="#e8e8e8"/>
-                                                <TextBlock FontSize="12"
-                                                           Foreground="#888"
-                                                           Margin="0,2,0,0">
-                                                    <Run Text="{Binding Tracks.Count}"/>
-                                                    <Run Text="tracks"/>
-                                                </TextBlock>
-                                                <!-- Show directory path for directory playlists -->
-                                                <TextBlock Text="{Binding DirectoryPath}"
-                                                           FontSize="10"
-                                                           Foreground="#666"
-                                                           Margin="0,2,0,0"
-                                                           TextTrimming="CharacterEllipsis"
-                                                           IsVisible="{Binding IsDirectoryPlaylist}"/>
-                                            </StackPanel>
-                                            <!-- Remove button for user playlists -->
-                                            <Button Grid.Column="1"
-                                                    Content="×"
-                                                    Classes="control-btn"
-                                                    Width="24" Height="24"
-                                                    FontSize="16"
-                                                    Padding="0"
-                                                    IsVisible="{Binding !IsDirectoryPlaylist}"
-                                                    Click="DeletePlaylist_Click"
-                                                    Tag="{Binding}"
-                                                    HorizontalContentAlignment="Center"
-                                                    VerticalContentAlignment="Center"/>
-                                            <!-- Remove button for directory playlists (requires double tap) -->
-                                            <Button Grid.Column="1"
-                                                    Content="×"
-                                                    Classes="control-btn"
-                                                    Width="24" Height="24"
-                                                    FontSize="16"
-                                                    Padding="0"
-                                                    IsVisible="{Binding IsDirectoryPlaylist}"
-                                                    DoubleTapped="DeleteDirectoryPlaylist_DoubleTapped"
-                                                    Tag="{Binding}"
-                                                    HorizontalContentAlignment="Center"
-                                                    VerticalContentAlignment="Center"/>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
+                <!-- Header -->
+                <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding SelectedPlaylist.Name, FallbackValue='All songs'}"
+                                   FontSize="26"
+                                   FontWeight="Bold"
+                                   TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Classes="secondary"
+                                   Text="{Binding StatusMessage}"
+                                   FontSize="12"
+                                   Margin="0,3,0,0"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Button Classes="secondary" Click="CreatePlaylist_Click" ToolTip.Tip="Create a playlist from the checked songs">
+                            <StackPanel Orientation="Horizontal" Spacing="7">
+                                <PathIcon Data="{StaticResource IconPlaylistPlus}"/>
+                                <TextBlock Text="New playlist" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="secondary" Click="AddToPlaylist_Click" ToolTip.Tip="Add the checked songs to a playlist">
+                            <StackPanel Orientation="Horizontal" Spacing="7">
+                                <PathIcon Data="{StaticResource IconPlus}"/>
+                                <TextBlock Text="Add to playlist" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
                 </Grid>
-            </Border>
-        </Grid>
 
-        <!-- Now Playing Panel -->
-        <Border Grid.Row="2"
-                Background="#16213e"
-                CornerRadius="24,24,0,0"
-                Padding="24,12">
-            <Grid RowDefinitions="Auto,Auto,Auto">
-                <!-- Track Info -->
-                <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,8">
-                    <TextBlock Text="{Binding CurrentTrack.DisplayName, FallbackValue='Select a track to play'}"
-                               FontSize="16"
-                               FontWeight="Bold"
-                               Foreground="#e8e8e8"
+                <!-- Search -->
+                <Border Grid.Row="1" Classes="search-pill" Margin="0,18,0,10">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <PathIcon Grid.Column="0"
+                                  Data="{StaticResource IconSearch}"
+                                  Width="15" Height="15"
+                                  Foreground="{StaticResource TextMutedBrush}"
+                                  Margin="0,0,10,0"/>
+                        <TextBox Grid.Column="1"
+                                 Classes="bare"
+                                 Text="{Binding SearchText}"
+                                 Watermark="Search songs, artists or albums"/>
+                    </Grid>
+                </Border>
+
+                <!-- Empty state -->
+                <StackPanel Grid.Row="2"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            Spacing="10"
+                            IsVisible="{Binding EmptyStateText, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <Border Width="64" Height="64" CornerRadius="20" Background="{StaticResource Bg2Brush}" HorizontalAlignment="Center">
+                        <PathIcon Data="{StaticResource IconMusic}" Width="26" Height="26" Foreground="{StaticResource TextMutedBrush}"/>
+                    </Border>
+                    <TextBlock Classes="secondary"
+                               Text="{Binding EmptyStateText}"
+                               FontSize="13"
+                               TextAlignment="Center"
                                HorizontalAlignment="Center"/>
-                    <TextBlock Text="{Binding CurrentTrack.DisplayArtist, FallbackValue=''}"
-                               FontSize="12"
-                               Foreground="#888"
-                               HorizontalAlignment="Center"
-                               Margin="0,2,0,0"/>
                 </StackPanel>
 
-                <!-- Progress Bar -->
-                <Grid Grid.Row="1" ColumnDefinitions="50,*,50" Margin="0,0,0,12">
+                <!-- Track list -->
+                <ListBox Grid.Row="2"
+                         x:Name="TrackList"
+                         Classes="tracks"
+                         ItemsSource="{Binding Tracks}"
+                         SelectedItem="{Binding CurrentTrack, Mode=OneWay}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         SelectionChanged="TrackList_SelectionChanged"
+                         Margin="0,0,0,8">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:Track">
+                            <Grid ColumnDefinitions="Auto,24,*,Auto,Auto">
+                                <!-- Multi-select for playlists -->
+                                <CheckBox Grid.Column="0"
+                                          Classes="row-select"
+                                          IsChecked="{Binding IsSelected}"
+                                          VerticalAlignment="Center"
+                                          Margin="0,0,8,0"/>
+
+                                <!-- Now playing indicator -->
+                                <PathIcon Grid.Column="1"
+                                          Classes="now-playing"
+                                          Data="{StaticResource IconEqualizer}"
+                                          VerticalAlignment="Center"/>
+
+                                <!-- Title / artist · album -->
+                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="8,0,0,0">
+                                    <TextBlock Classes="track-title"
+                                               Text="{Binding DisplayName}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Classes="track-sub"
+                                               Margin="0,2,0,0"
+                                               TextTrimming="CharacterEllipsis">
+                                        <Run Text="{Binding DisplayArtist}"/>
+                                        <Run Text="  ·  " Foreground="{StaticResource TextMutedBrush}"/>
+                                        <Run Text="{Binding DisplayAlbum}"/>
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <!-- Duration -->
+                                <TextBlock Grid.Column="3"
+                                           Classes="track-meta"
+                                           Text="{Binding DurationFormatted}"
+                                           VerticalAlignment="Center"
+                                           Margin="16,0,0,0"/>
+
+                                <!-- Remove from custom playlist -->
+                                <Button Grid.Column="4"
+                                        Classes="icon small row-action"
+                                        Margin="8,0,0,0"
+                                        Click="RemoveFromPlaylist_Click"
+                                        Tag="{Binding}"
+                                        ToolTip.Tip="Remove from this playlist"
+                                        IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).CanRemoveFromPlaylist}">
+                                    <PathIcon Data="{StaticResource IconMinus}"/>
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Grid>
+
+        <!-- Player bar -->
+        <Border Grid.Row="1"
+                Background="{StaticResource Bg1Brush}"
+                BorderBrush="{StaticResource LineBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="20,10,20,14">
+            <Grid RowDefinitions="Auto,Auto">
+
+                <!-- Progress -->
+                <Grid Grid.Row="0" ColumnDefinitions="44,*,44" Margin="0,0,0,6">
                     <TextBlock Grid.Column="0"
+                               Classes="secondary"
                                Text="{Binding CurrentTimeFormatted}"
                                VerticalAlignment="Center"
-                               Foreground="#888"
-                               FontSize="12"/>
+                               FontSize="11"/>
                     <Slider Grid.Column="1"
+                            x:Name="ProgressSlider"
+                            Classes="progress"
                             Minimum="0" Maximum="100"
                             Value="{Binding Position}"
-                            Margin="16,0"
-                            PointerReleased="ProgressSlider_PointerReleased"/>
+                            Margin="10,0"
+                            VerticalAlignment="Center"/>
                     <TextBlock Grid.Column="2"
+                               Classes="secondary"
                                Text="{Binding TotalTimeFormatted}"
                                VerticalAlignment="Center"
-                               Foreground="#888"
-                               FontSize="12"
+                               FontSize="11"
                                TextAlignment="Right"/>
                 </Grid>
 
-                <!-- Playback Controls -->
-                <Grid Grid.Row="2" ColumnDefinitions="*,Auto,*">
-                    <!-- Left: Shuffle & Repeat -->
-                    <StackPanel Grid.Column="0"
-                                Orientation="Horizontal"
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Center"
-                                Spacing="8">
-                        <ToggleButton Classes="mode-btn"
-                                      IsChecked="{Binding ShuffleEnabled}">
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <TextBlock Text="Shuffle" FontSize="11"/>
-                            </StackPanel>
-                        </ToggleButton>
-                        <ToggleButton Classes="mode-btn"
-                                      IsChecked="{Binding RepeatEnabled}">
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <TextBlock Text="Repeat" FontSize="11"/>
-                            </StackPanel>
-                        </ToggleButton>
-                        <ToggleButton Classes="mode-btn"
-                                      IsChecked="{Binding RepeatOneEnabled}">
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <TextBlock Text="Repeat One" FontSize="11"/>
-                            </StackPanel>
-                        </ToggleButton>
+                <Grid Grid.Row="1" ColumnDefinitions="*,Auto,*">
+
+                    <!-- Now playing -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                        <Border Width="46" Height="46" CornerRadius="10" Background="{StaticResource Bg2Brush}">
+                            <PathIcon Data="{StaticResource IconMusic}"
+                                      Width="20" Height="20"
+                                      Foreground="{StaticResource AccentBrush}"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center" MaxWidth="320">
+                            <TextBlock Text="{Binding CurrentTrack.DisplayName, FallbackValue='Nothing playing'}"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Classes="secondary"
+                                       Text="{Binding CurrentTrack.DisplayArtist, FallbackValue='Pick a song to start'}"
+                                       FontSize="12"
+                                       Margin="0,1,0,0"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Classes="muted"
+                                       FontSize="11"
+                                       Margin="0,2,0,0"
+                                       TextTrimming="CharacterEllipsis"
+                                       IsVisible="{Binding UpNextTrack, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                <Run Text="Up next · "/>
+                                <Run Text="{Binding UpNextTrack.DisplayName, FallbackValue=''}"/>
+                            </TextBlock>
+                        </StackPanel>
                     </StackPanel>
 
-                    <!-- Center: Main Controls -->
-                    <StackPanel Grid.Column="1"
-                                Orientation="Horizontal"
-                                HorizontalAlignment="Center"
-                                Spacing="12">
-                        <!-- Previous Button (<<) -->
-                        <Button Classes="control-btn"
+                    <!-- Transport -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                        <ToggleButton Classes="mode"
+                                      IsChecked="{Binding ShuffleEnabled}"
+                                      ToolTip.Tip="Shuffle - deals a random queue of the current list">
+                            <PathIcon Data="{StaticResource IconShuffle}"/>
+                        </ToggleButton>
+
+                        <Button Classes="icon"
                                 Command="{Binding PlayPreviousCommand}"
-                                Width="40" Height="40"
-                                HorizontalContentAlignment="Center"
-                                VerticalContentAlignment="Center">
-                            <Viewbox Width="24" Height="24">
-                                <Canvas Width="24" Height="24">
-                                    <Path Fill="{Binding $parent[Button].Foreground}"
-                                          Data="M11,7 L11,17 L5,12 Z M18,7 L18,17 L12,12 Z"/>
-                                </Canvas>
-                                <Viewbox.RenderTransform>
-                                    <TranslateTransform X="0" Y="1"/>
-                                </Viewbox.RenderTransform>
-                            </Viewbox>
+                                Margin="6,0,0,0"
+                                ToolTip.Tip="Previous (Ctrl+←)">
+                            <PathIcon Data="{StaticResource IconPrevious}"/>
                         </Button>
 
-                        <!-- Play/Pause Button -->
-                        <Button Classes="play-btn"
+                        <Button Classes="icon"
+                                Command="{Binding SeekBackwardCommand}"
+                                ToolTip.Tip="Back 10 seconds (←)">
+                            <PathIcon Data="{StaticResource IconRewind}"/>
+                        </Button>
+
+                        <Button Classes="play"
                                 Command="{Binding TogglePlayPauseCommand}"
-                                Width="56" Height="56"
-                                HorizontalContentAlignment="Center"
-                                VerticalContentAlignment="Center">
+                                Margin="6,0"
+                                ToolTip.Tip="Play / pause (Space)">
                             <Panel>
-                                <!-- Play Icon -->
-                                <Viewbox Width="26" Height="26" IsVisible="{Binding !IsPlaying}">
-                                    <Canvas Width="24" Height="24">
-                                        <Path Fill="{Binding $parent[Button].Foreground}"
-                                              Data="M8,5 L8,19 L19,12 Z"/>
-                                    </Canvas>
-                                </Viewbox>
-                                <!-- Pause Icon -->
-                                <Viewbox Width="26" Height="26" IsVisible="{Binding IsPlaying}">
-                                    <Canvas Width="24" Height="24">
-                                        <Path Fill="{Binding $parent[Button].Foreground}"
-                                              Data="M6,4 L10,4 L10,20 L6,20 Z M14,4 L18,4 L18,20 L14,20 Z"/>
-                                    </Canvas>
-                                </Viewbox>
+                                <PathIcon Data="{StaticResource IconPlay}"
+                                          IsVisible="{Binding !IsPlaying}"
+                                          Margin="3,0,0,0"/>
+                                <PathIcon Data="{StaticResource IconPause}"
+                                          IsVisible="{Binding IsPlaying}"/>
                             </Panel>
                         </Button>
 
-                        <!-- Next Button (>>) -->
-                        <Button Classes="control-btn"
-                                Command="{Binding PlayNextCommand}"
-                                Width="40" Height="40"
-                                HorizontalContentAlignment="Center"
-                                VerticalContentAlignment="Center">
-                            <Viewbox Width="24" Height="24">
-                                <Canvas Width="24" Height="24">
-                                    <Path Fill="{Binding $parent[Button].Foreground}"
-                                          Data="M6,7 L6,17 L12,12 Z M13,7 L13,17 L19,12 Z"/>
-                                </Canvas>
-                                <Viewbox.RenderTransform>
-                                    <TranslateTransform X="1" Y="1"/>
-                                </Viewbox.RenderTransform>
-                            </Viewbox>
+                        <Button Classes="icon"
+                                Command="{Binding SeekForwardCommand}"
+                                ToolTip.Tip="Forward 10 seconds (→)">
+                            <PathIcon Data="{StaticResource IconForward}"/>
                         </Button>
+
+                        <Button Classes="icon"
+                                Command="{Binding PlayNextCommand}"
+                                Margin="0,0,6,0"
+                                ToolTip.Tip="Next (Ctrl+→)">
+                            <PathIcon Data="{StaticResource IconNext}"/>
+                        </Button>
+
+                        <ToggleButton Classes="mode"
+                                      IsChecked="{Binding RepeatEnabled}"
+                                      ToolTip.Tip="Repeat the list">
+                            <PathIcon Data="{StaticResource IconRepeat}"/>
+                        </ToggleButton>
+                        <ToggleButton Classes="mode"
+                                      IsChecked="{Binding RepeatOneEnabled}"
+                                      ToolTip.Tip="Repeat this song">
+                            <PathIcon Data="{StaticResource IconRepeatOne}"/>
+                        </ToggleButton>
                     </StackPanel>
 
-                    <!-- Right: Volume -->
+                    <!-- Volume -->
                     <StackPanel Grid.Column="2"
                                 Orientation="Horizontal"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
-                                Spacing="12">
-                        <TextBlock Text="Vol"
-                                   VerticalAlignment="Center"
-                                   Foreground="#888"
-                                   FontSize="13"/>
+                                Spacing="10">
+                        <PathIcon Data="{StaticResource IconVolume}"
+                                  Width="16" Height="16"
+                                  Foreground="{StaticResource TextSecondaryBrush}"/>
                         <Slider Minimum="0" Maximum="100"
                                 Value="{Binding Volume}"
-                                Width="120"/>
+                                Width="110"
+                                VerticalAlignment="Center"/>
                     </StackPanel>
                 </Grid>
             </Grid>

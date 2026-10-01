@@ -12,9 +12,26 @@ A modern, cross-platform music player built with .NET and Avalonia. Downloading 
 - 📝 Create and manage playlists
 - 🔍 Search your music library
 - 📁 Support for multiple music directories
-- 🎨 Clean, intuitive interface
+- 🔀 Shuffle that deals a random queue of the current list, with an "Up next" hint
+- ⏩ Fast-forward / rewind 10 seconds, plus click-and-drag scrubbing on the progress bar
+- ⌨️ Keyboard transport controls (see below)
+- 🎨 Dark neon interface with a sidebar for playlists and sources
 - ⚡ Fast and lightweight
 - 📥 Download music from YouTube playlists
+
+### Keyboard shortcuts
+
+| Key | Action |
+| --- | --- |
+| `Space` | Play / pause |
+| `←` / `→` | Rewind / fast-forward 10 seconds |
+| `Ctrl+←` / `Ctrl+→` (`⌘` on macOS) | Previous / next track |
+
+Shortcuts are ignored while you are typing in a text box.
+
+### How shuffle works
+
+Turning shuffle on deals a random queue from whatever you are looking at (a playlist or the whole library), starting with the song that is already playing. **Next** and **Previous** simply walk forwards and backwards through that queue, so going back always returns to the song you just heard. Picking a song from the list jumps to its spot in the queue. When the queue runs out, playback stops, or a fresh queue is dealt if **Repeat** is on. Searching never reshuffles the queue.
 
 ---
 
@@ -25,7 +42,7 @@ This feature allows you to download entire YouTube playlists directly into your 
 ### How to Use:
 
 1. **Open the Download Window**
-   - Click the YouTube download button in the main interface
+   - Click the **YouTube** button under **Sources** in the sidebar
    - A new window will appear with the download options
 
 2. **Enter Playlist URL**
@@ -45,7 +62,7 @@ This feature allows you to download entire YouTube playlists directly into your 
    - Once the download finishes, a "Copy Path" button will appear
    - Click "Copy Path" to copy the save directory location to your clipboard
    - Return to the main player window
-   - Click "Add Directory" and paste the copied path
+   - Paste the copied path into the "Paste folder paths" box under **Sources** in the sidebar and click **+**
    - Your downloaded playlist will now be available in your music library
 
 ### Tips:
