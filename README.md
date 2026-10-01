@@ -1,6 +1,8 @@
 # 🎵 Music Player
 
-A modern, cross-platform music player built with .NET and Avalonia. Downloading music from YT currently does not work.
+A modern, cross-platform music player built with .NET and Avalonia.
+
+> **Note on YouTube downloads:** they rely on [YoutubeExplode](https://github.com/Tyrrrz/YoutubeExplode), and YouTube changes its download protection regularly. If downloads start failing with a `403 Forbidden` error, updating the `YoutubeExplode` package in `MusicPlayer.csproj` to the latest version is usually the fix.
 
 **Download:** [Latest Release](https://github.com/as-notchu/Music-Player/releases)
 

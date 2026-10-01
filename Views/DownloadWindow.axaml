@@ -235,7 +235,7 @@
             <StackPanel Grid.Column="0"
                         Orientation="Horizontal"
                         VerticalAlignment="Center">
-                <TextBlock Text="WebM format  ·  10-second delay between songs"
+                <TextBlock Text="WebM (M4A fallback)  ·  10-second delay between songs"
                            Foreground="{StaticResource TextMutedBrush}"
                            FontSize="11"
                            VerticalAlignment="Center"/>
