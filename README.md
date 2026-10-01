@@ -75,8 +75,10 @@ This feature allows you to download entire YouTube playlists directly into your 
 ---
 
 ## Screenshots
-<img width="600" height="490" alt="image" src="https://github.com/user-attachments/assets/c5bf6a89-4a39-4fb6-9a04-46a42abcb17e" />
-<img width="600" height="600" alt="image" src="https://github.com/user-attachments/assets/aa56fd08-5e68-4d35-8019-da8a81870ce8" />
+<img width="1408" height="932" alt="image" src="https://github.com/user-attachments/assets/56db8125-2509-446b-bc4b-2a596833921b" />
+
+<img width="863" height="844" alt="image" src="https://github.com/user-attachments/assets/147f32e8-6807-40b5-ba30-fd9e4cdebd7a" />
+
 
 
 ## 📥 Installation
