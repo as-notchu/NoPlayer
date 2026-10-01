@@ -40,6 +40,11 @@
             <SolidColorBrush x:Key="AccentHoverBrush" Color="{StaticResource AccentHoverColor}"/>
             <SolidColorBrush x:Key="AccentPressedBrush" Color="{StaticResource AccentPressedColor}"/>
             <SolidColorBrush x:Key="AccentSoftBrush" Color="{StaticResource AccentSoftColor}"/>
+            <!-- Zero-alpha twins of the hover colours. Hover fades must start from these instead of
+                 Transparent (#00FFFFFF): a BrushTransition lerps straight RGBA, so fading from
+                 Transparent passes through a bright white-grey flash. -->
+            <SolidColorBrush x:Key="Bg2ClearBrush" Color="#001A1A24"/>
+            <SolidColorBrush x:Key="Bg3ClearBrush" Color="#00242431"/>
 
             <!-- Re-tint the Fluent controls we don't restyle by hand (check boxes, sliders, list selection...) -->
             <Color x:Key="SystemAccentColor">#FF3D8E</Color>
@@ -194,7 +199,7 @@
 
         <!-- Icon-only (transparent) -->
         <Style Selector="Button.icon">
-            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Background" Value="{StaticResource Bg3ClearBrush}"/>
             <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="Width" Value="36"/>
@@ -210,7 +215,7 @@
             <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
         </Style>
         <Style Selector="Button.icon:disabled /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Background" Value="{StaticResource Bg3ClearBrush}"/>
             <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
         </Style>
         <Style Selector="Button.icon PathIcon">
@@ -251,7 +256,7 @@
 
         <!-- Shuffle / repeat toggles -->
         <Style Selector="ToggleButton.mode">
-            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Background" Value="{StaticResource Bg3ClearBrush}"/>
             <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="Width" Value="36"/>
@@ -281,7 +286,7 @@
 
         <!-- Sidebar navigation rows (used for both the "All songs" button and playlist entries) -->
         <Style Selector="Button.nav">
-            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Background" Value="{StaticResource Bg3ClearBrush}"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Setter Property="Padding" Value="12,9"/>
@@ -309,7 +314,7 @@
         </Style>
 
         <Style Selector="Border.nav-item">
-            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Background" Value="{StaticResource Bg3ClearBrush}"/>
             <Setter Property="CornerRadius" Value="10"/>
             <Setter Property="Padding" Value="12,8"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -427,7 +432,7 @@
             <Setter Property="Padding" Value="12,8"/>
             <Setter Property="Margin" Value="0,1"/>
             <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Background" Value="{StaticResource Bg2ClearBrush}"/>
             <Setter Property="MinHeight" Value="52"/>
         </Style>
         <Style Selector="ListBox.tracks ListBoxItem /template/ ContentPresenter#PART_ContentPresenter">
