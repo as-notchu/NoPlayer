@@ -13,6 +13,9 @@ namespace MusicPlayer.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase, IDisposable
 {
+    /// <summary>How far the fast-forward / rewind buttons and arrow keys jump.</summary>
+    public const long SeekStepMilliseconds = 10_000;
+
     private readonly AudioPlayerService _audioPlayer;
     private readonly MusicLibraryService _libraryService;
     private readonly SettingsService _settingsService;
@@ -23,10 +26,11 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly EventHandler _mediaPlayPauseHandler;
     private readonly EventHandler _mediaNextHandler;
     private readonly EventHandler _mediaPreviousHandler;
-    private List<int> _shuffleQueue = new();          // Pre-shuffled queue of track indices
-    private int _shuffleQueuePosition = -1;            // Current position in queue
-    private List<int> _playbackHistory = new(100);     // Full playback history for Previous
-    private int _playbackHistoryIndex = -1;            // Position in playback history
+
+    // Shuffle is a plain random queue: the current playback source (playlist or whole library)
+    // shuffled once. Next / Previous simply walk forwards and backwards through it.
+    private List<Track> _shuffleQueue = new();
+    private int _shuffleQueuePosition = -1;
     private bool _disposed;
 
     [ObservableProperty]
@@ -52,6 +56,10 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private Track? _currentTrack;
 
+    /// <summary>The track that will play after the current one (null when playback will stop).</summary>
+    [ObservableProperty]
+    private Track? _upNextTrack;
+
     [ObservableProperty]
     private bool _isPlaying;
 
@@ -69,6 +77,10 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     [ObservableProperty]
     private double _position;
+
+    /// <summary>True while the user drags the progress slider; position updates from the player are paused.</summary>
+    [ObservableProperty]
+    private bool _isSeeking;
 
     [ObservableProperty]
     private long _currentTime;
@@ -90,6 +102,10 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     [ObservableProperty]
     private string _statusMessage = "Ready";
+
+    /// <summary>Hint shown in place of the track list when it is empty (null hides it).</summary>
+    [ObservableProperty]
+    private string? _emptyStateText = "Add a music folder in the sidebar to get started";
 
     public MainWindowViewModel()
     {
@@ -134,6 +150,12 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
+    /// <summary>
+    /// The list playback walks through: the selected playlist, or the whole library.
+    /// Search filtering never changes this, so a filtered view does not reshuffle the queue.
+    /// </summary>
+    private IReadOnlyList<Track> PlaybackSource => SelectedPlaylist != null ? SelectedPlaylist.Tracks : _allTracks;
+
     partial void OnVolumeChanged(double value)
     {
         _audioPlayer.Volume = (int)value;
@@ -145,36 +167,36 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         _settingsService.UpdateShuffle(value);
         if (value)
         {
-            // Generate shuffle queue when shuffle enabled
-            GenerateShuffleQueue();
-
-            // Add current track to playback history if playing
-            if (CurrentTrack != null)
-            {
-                var index = Tracks.IndexOf(CurrentTrack);
-                if (index >= 0)
-                {
-                    AddToPlaybackHistory(index);
-                }
-            }
+            // Build one random queue starting from whatever is playing right now
+            RebuildShuffleQueue(CurrentTrack);
         }
         else
         {
-            // Clear shuffle queue when disabled
             _shuffleQueue.Clear();
             _shuffleQueuePosition = -1;
-            // Keep playback history for Previous button
+            UpdateUpNext();
         }
     }
 
     partial void OnRepeatEnabledChanged(bool value)
     {
         _settingsService.UpdateRepeat(value);
+        UpdateUpNext();
     }
 
     partial void OnRepeatOneEnabledChanged(bool value)
     {
         _settingsService.UpdateRepeatOne(value);
+        UpdateUpNext();
+    }
+
+    partial void OnPositionChanged(double value)
+    {
+        // While scrubbing, let the time label follow the thumb instead of the player
+        if (IsSeeking && TotalTime > 0)
+        {
+            CurrentTimeFormatted = FormatTime((long)(TotalTime * value / 100.0));
+        }
     }
 
     private void OnPlaybackStarted(object? sender, EventArgs e)
@@ -231,7 +253,13 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     private void OnPositionChanged(object? sender, float position)
     {
-        Dispatcher.UIThread.Post(() => Position = position * 100);
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (!IsSeeking)
+            {
+                Position = position * 100;
+            }
+        });
     }
 
     private void OnTimeChanged(object? sender, long time)
@@ -239,7 +267,10 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         Dispatcher.UIThread.Post(() =>
         {
             CurrentTime = time;
-            CurrentTimeFormatted = FormatTime(time);
+            if (!IsSeeking)
+            {
+                CurrentTimeFormatted = FormatTime(time);
+            }
         });
     }
 
@@ -305,6 +336,10 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
                 .Select(g => g.First())
                 .ToList();
 
+            // A reload always shows the whole library, so drop any stale playlist selection
+            SelectedPlaylist = null;
+            CanRemoveFromPlaylist = false;
+
             // Update tracks and playlists
             _allTracks = uniqueTracks; // Store all tracks for search/filtering
             UpdateTracksCollection(uniqueTracks);
@@ -312,6 +347,10 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
             // Load custom playlists from settings
             LoadCustomPlaylists();
+
+            // Keep the currently playing track (if any) at the front of the new queue
+            CurrentTrack = ResolveCurrentTrack(uniqueTracks);
+            OnPlaybackSourceChanged();
 
             StatusMessage = $"Loaded {Tracks.Count} tracks from {directoriesToScan.Count} folder(s)";
         }
@@ -325,6 +364,14 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
+    /// <summary>After a rescan the Track objects are new instances; find the one matching what is playing.</summary>
+    private Track? ResolveCurrentTrack(List<Track> freshTracks)
+    {
+        if (CurrentTrack == null) return null;
+        var path = CurrentTrack.FilePath;
+        return freshTracks.FirstOrDefault(t => t.FilePath == path) ?? CurrentTrack;
+    }
+
     [RelayCommand]
     private void PlayTrack(Track? track)
     {
@@ -335,41 +382,48 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             CurrentTrack = track;
             _audioPlayer.Play(track);
 
-            var trackIndex = Tracks.IndexOf(track);
-            if (trackIndex >= 0)
+            if (ShuffleEnabled)
             {
-                // When shuffle enabled, remove track from remaining queue if it exists ahead
-                if (ShuffleEnabled)
+                // Jump to the track inside the queue so Next / Previous continue from here.
+                // A track that is not part of the queue (e.g. played from another view) starts a fresh one.
+                var queueIndex = _shuffleQueue.IndexOf(track);
+                if (queueIndex >= 0)
                 {
-                    // Find track in remaining queue (positions after current position)
-                    for (int i = _shuffleQueuePosition + 1; i < _shuffleQueue.Count; i++)
-                    {
-                        if (_shuffleQueue[i] == trackIndex)
-                        {
-                            _shuffleQueue.RemoveAt(i);
-                            break;
-                        }
-                    }
+                    _shuffleQueuePosition = queueIndex;
                 }
-
-                // Add to playback history
-                AddToPlaybackHistory(trackIndex);
+                else
+                {
+                    RebuildShuffleQueue(track);
+                }
             }
+
+            UpdateUpNext();
         }
         catch (Exception ex)
         {
             StatusMessage = $"Failed to play track: {ex.Message}";
             CurrentTrack = null;
             IsPlaying = false;
+            UpdateUpNext();
         }
     }
 
     [RelayCommand]
     private void TogglePlayPause()
     {
-        if (CurrentTrack == null && Tracks.Count > 0)
+        if (CurrentTrack == null)
         {
-            PlayTrack(Tracks[0]);
+            if (Tracks.Count > 0)
+            {
+                PlayTrack(Tracks[0]);
+            }
+            return;
+        }
+
+        // Playback finished (or was stopped) - start the current track again instead of doing nothing
+        if (!_audioPlayer.HasStream)
+        {
+            PlayTrack(CurrentTrack);
             return;
         }
 
@@ -388,8 +442,6 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         // Clear search to restore full playlist/library view
         SearchText = string.Empty;
 
-        if (Tracks.Count == 0) return;
-
         // If Repeat One is enabled, just replay the current track
         if (RepeatOneEnabled && CurrentTrack != null)
         {
@@ -397,80 +449,65 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        int nextIndex;
+        var next = ShuffleEnabled ? NextInShuffleQueue() : NextSequential();
 
-        if (ShuffleEnabled)
+        if (next == null)
         {
-            // First check if can move forward in playback history (user previously went back)
-            if (_playbackHistoryIndex < _playbackHistory.Count - 1)
-            {
-                _playbackHistoryIndex++;
-                nextIndex = _playbackHistory[_playbackHistoryIndex];
-            }
-            else
-            {
-                // Advance in shuffle queue
-                _shuffleQueuePosition++;
-
-                // If reached end of queue, regenerate and start over
-                if (_shuffleQueuePosition >= _shuffleQueue.Count)
-                {
-                    // Check if repeat is enabled or if we should stop
-                    if (!RepeatEnabled)
-                    {
-                        Stop();
-                        return;
-                    }
-
-                    GenerateShuffleQueue();
-                    _shuffleQueuePosition = 0;
-                }
-
-                // Handle empty queue (e.g., single track playlist)
-                if (_shuffleQueue.Count == 0)
-                {
-                    // For single track or current track only, replay if repeat enabled
-                    if (RepeatEnabled && CurrentTrack != null)
-                    {
-                        nextIndex = Tracks.IndexOf(CurrentTrack);
-                    }
-                    else
-                    {
-                        Stop();
-                        return;
-                    }
-                }
-                else
-                {
-                    nextIndex = _shuffleQueue[_shuffleQueuePosition];
-                }
-
-                // Add to playback history (only for new tracks, not when navigating existing history)
-                AddToPlaybackHistory(nextIndex);
-            }
-        }
-        else
-        {
-            // Non-shuffle mode: sequential playback
-            var currentIndex = CurrentTrack != null ? Tracks.IndexOf(CurrentTrack) : -1;
-            nextIndex = currentIndex + 1;
-
-            if (nextIndex >= Tracks.Count)
-            {
-                if (RepeatEnabled)
-                    nextIndex = 0;
-                else
-                {
-                    Stop();
-                    return;
-                }
-            }
-
-            // Add to playback history for non-shuffle mode too
-            AddToPlaybackHistory(nextIndex);
+            Stop();
+            UpdateUpNext();
+            return;
         }
 
-        PlayTrack(Tracks[nextIndex]);
+        PlayTrack(next);
+    }
+
+    private Track? NextInShuffleQueue()
+    {
+        if (_shuffleQueue.Count == 0)
+        {
+            RebuildShuffleQueue(CurrentTrack);
+        }
+
+        if (_shuffleQueue.Count == 0) return null;
+
+        var nextPosition = _shuffleQueuePosition + 1;
+
+        if (nextPosition >= _shuffleQueue.Count)
+        {
+            // End of the queue: stop, or deal a fresh random queue when repeating
+            if (!RepeatEnabled) return null;
+
+            RebuildShuffleQueue();
+
+            // Don't play the same song twice in a row across the boundary
+            if (_shuffleQueue.Count > 1 && ReferenceEquals(_shuffleQueue[0], CurrentTrack))
+            {
+                var swapWith = _random.Next(1, _shuffleQueue.Count);
+                (_shuffleQueue[0], _shuffleQueue[swapWith]) = (_shuffleQueue[swapWith], _shuffleQueue[0]);
+            }
+
+            nextPosition = 0;
+        }
+
+        _shuffleQueuePosition = nextPosition;
+        return _shuffleQueue[nextPosition];
+    }
+
+    private Track? NextSequential()
+    {
+        var source = PlaybackSource;
+        if (source.Count == 0) return null;
+
+        var index = CurrentTrack != null ? IndexOfTrack(source, CurrentTrack) : -1;
+        index++;
+
+        if (index >= source.Count)
+        {
+            if (!RepeatEnabled) return null;
+            index = 0;
+        }
+
+        return source[index];
     }
 
     [RelayCommand]
@@ -479,8 +516,6 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         // Clear search to restore full playlist/library view
         SearchText = string.Empty;
 
-        if (Tracks.Count == 0) return;
-
         // If more than 3 seconds into track, restart current track
         if (_audioPlayer.Time > 3000)
         {
@@ -488,44 +523,45 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        int prevIndex;
+        Track? previous;
 
-        // Use playback history for both shuffle and non-shuffle modes
-        if (_playbackHistoryIndex > 0)
+        if (ShuffleEnabled)
         {
-            _playbackHistoryIndex--;
-            prevIndex = _playbackHistory[_playbackHistoryIndex];
-        }
-        else
-        {
-            // At beginning of history
-            if (ShuffleEnabled)
+            var previousPosition = _shuffleQueuePosition - 1;
+
+            if (previousPosition < 0)
             {
-                // In shuffle mode, can't go back further, restart current track
-                if (CurrentTrack != null)
+                if (RepeatEnabled && _shuffleQueue.Count > 0)
                 {
+                    previousPosition = _shuffleQueue.Count - 1;
+                }
+                else
+                {
+                    // Start of the queue: just restart the current track
                     _audioPlayer.Seek(0);
                     return;
                 }
-                prevIndex = 0;
             }
-            else
-            {
-                // In non-shuffle mode, wrap to last track if repeat enabled
-                var currentIndex = CurrentTrack != null ? Tracks.IndexOf(CurrentTrack) : 0;
-                prevIndex = currentIndex - 1;
 
-                if (prevIndex < 0)
-                {
-                    if (RepeatEnabled)
-                        prevIndex = Tracks.Count - 1;
-                    else
-                        prevIndex = 0;
-                }
+            previous = _shuffleQueue[previousPosition];
+        }
+        else
+        {
+            var source = PlaybackSource;
+            if (source.Count == 0) return;
+
+            var index = CurrentTrack != null ? IndexOfTrack(source, CurrentTrack) : 0;
+            index--;
+
+            if (index < 0)
+            {
+                index = RepeatEnabled ? source.Count - 1 : 0;
             }
+
+            previous = source[index];
         }
 
-        PlayTrack(Tracks[prevIndex]);
+        PlayTrack(previous);
     }
 
     [RelayCommand]
@@ -550,6 +586,20 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private void Seek(double position)
     {
         _audioPlayer.Seek((float)(position / 100.0));
+    }
+
+    /// <summary>Fast-forward the current track by <see cref="SeekStepMilliseconds"/>.</summary>
+    [RelayCommand]
+    private void SeekForward()
+    {
+        _audioPlayer.SeekRelative(SeekStepMilliseconds);
+    }
+
+    /// <summary>Rewind the current track by <see cref="SeekStepMilliseconds"/>.</summary>
+    [RelayCommand]
+    private void SeekBackward()
+    {
+        _audioPlayer.SeekRelative(-SeekStepMilliseconds);
     }
 
     public void UpdateMusicFolder(string path)
@@ -619,12 +669,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
 
         SelectedPlaylist = playlist;
-
-        // Reset shuffle state when switching playlists
-        _shuffleQueue.Clear();
-        _shuffleQueuePosition = -1;
-        _playbackHistory.Clear();
-        _playbackHistoryIndex = -1;
+        SearchText = string.Empty;
 
         if (playlist != null)
         {
@@ -638,11 +683,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             // Can only remove from custom playlists
             CanRemoveFromPlaylist = !playlist.IsDirectoryPlaylist;
 
-            // Generate shuffle queue if shuffle is enabled
-            if (ShuffleEnabled)
-            {
-                GenerateShuffleQueue();
-            }
+            OnPlaybackSourceChanged();
         }
         else
         {
@@ -728,6 +769,12 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
         // Save custom playlists
         SaveCustomPlaylists();
+
+        // Newly added tracks should be part of the queue if that playlist is playing
+        if (SelectedPlaylist == targetPlaylist)
+        {
+            OnPlaybackSourceChanged();
+        }
     }
 
     [RelayCommand]
@@ -750,7 +797,20 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         {
             // Also remove from the current view
             Tracks.Remove(track);
+            RefreshEmptyState();
             StatusMessage = $"Removed from '{SelectedPlaylist.Name}'";
+
+            // Drop it from the shuffle queue too, keeping the position pointing at the same song
+            var queueIndex = _shuffleQueue.IndexOf(track);
+            if (queueIndex >= 0)
+            {
+                _shuffleQueue.RemoveAt(queueIndex);
+                if (queueIndex <= _shuffleQueuePosition)
+                {
+                    _shuffleQueuePosition--;
+                }
+            }
+            UpdateUpNext();
 
             // Save custom playlists
             SaveCustomPlaylists();
@@ -814,10 +874,26 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             Tracks.Add(track);
         }
 
-        // Regenerate shuffle queue if shuffle is enabled (tracks changed)
-        if (ShuffleEnabled)
+        RefreshEmptyState();
+    }
+
+    private void RefreshEmptyState()
+    {
+        if (Tracks.Count > 0)
         {
-            GenerateShuffleQueue();
+            EmptyStateText = null;
+        }
+        else if (!string.IsNullOrWhiteSpace(SearchText))
+        {
+            EmptyStateText = "No songs match your search";
+        }
+        else if (SelectedPlaylist != null)
+        {
+            EmptyStateText = "This playlist is empty";
+        }
+        else
+        {
+            EmptyStateText = "Add a music folder in the sidebar to get started";
         }
     }
 
@@ -835,6 +911,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         SearchText = string.Empty;
         UpdateTracksCollection(_allTracks);
         StatusMessage = $"Showing all {_allTracks.Count} tracks";
+
+        OnPlaybackSourceChanged();
     }
 
     private static string FormatTime(long milliseconds)
@@ -888,64 +966,98 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private void GenerateShuffleQueue()
+    /// <summary>Called whenever the playlist / library that playback walks through changes.</summary>
+    private void OnPlaybackSourceChanged()
     {
-        // Empty playlist check
-        if (Tracks.Count == 0)
+        if (ShuffleEnabled)
         {
-            _shuffleQueue.Clear();
-            _shuffleQueuePosition = -1;
-            return;
-        }
-
-        // Create list of all track indices
-        var indices = Enumerable.Range(0, Tracks.Count).ToList();
-
-        // Remove current track from pool if it exists (don't re-shuffle currently playing song)
-        if (CurrentTrack != null)
-        {
-            var currentIndex = Tracks.IndexOf(CurrentTrack);
-            if (currentIndex >= 0)
-            {
-                indices.Remove(currentIndex);
-            }
-        }
-
-        // Apply Fisher-Yates shuffle algorithm
-        for (int i = indices.Count - 1; i > 0; i--)
-        {
-            int j = _random.Next(i + 1);
-            (indices[i], indices[j]) = (indices[j], indices[i]);
-        }
-
-        // Store shuffled queue and reset position
-        _shuffleQueue = indices;
-        _shuffleQueuePosition = -1;
-    }
-
-    private void AddToPlaybackHistory(int trackIndex)
-    {
-        // If in middle of history, truncate future entries
-        if (_playbackHistoryIndex < _playbackHistory.Count - 1)
-        {
-            _playbackHistory.RemoveRange(_playbackHistoryIndex + 1, _playbackHistory.Count - _playbackHistoryIndex - 1);
-        }
-
-        // Append track index to history
-        _playbackHistory.Add(trackIndex);
-
-        // Enforce max size of 100 entries (remove oldest)
-        if (_playbackHistory.Count > 100)
-        {
-            _playbackHistory.RemoveAt(0);
+            RebuildShuffleQueue(CurrentTrack);
         }
         else
         {
-            _playbackHistoryIndex++;
+            UpdateUpNext();
+        }
+    }
+
+    /// <summary>
+    /// Deal a new random queue from the playback source (Fisher-Yates).
+    /// When <paramref name="startWith"/> is part of the source it is moved to the front and
+    /// marked as already playing, so Next continues with a song that hasn't been heard yet.
+    /// </summary>
+    private void RebuildShuffleQueue(Track? startWith = null)
+    {
+        _shuffleQueue = PlaybackSource.ToList();
+
+        for (var i = _shuffleQueue.Count - 1; i > 0; i--)
+        {
+            var j = _random.Next(i + 1);
+            (_shuffleQueue[i], _shuffleQueue[j]) = (_shuffleQueue[j], _shuffleQueue[i]);
         }
 
-        // Update index to latest position
-        _playbackHistoryIndex = _playbackHistory.Count - 1;
+        _shuffleQueuePosition = -1;
+
+        if (startWith != null)
+        {
+            var index = _shuffleQueue.IndexOf(startWith);
+            if (index > 0)
+            {
+                _shuffleQueue.RemoveAt(index);
+                _shuffleQueue.Insert(0, startWith);
+            }
+            if (index >= 0)
+            {
+                _shuffleQueuePosition = 0;
+            }
+        }
+
+        UpdateUpNext();
+    }
+
+    /// <summary>Recompute which track plays after the current one, for the "Up next" hint.</summary>
+    private void UpdateUpNext()
+    {
+        Track? next = null;
+
+        if (RepeatOneEnabled)
+        {
+            next = CurrentTrack;
+        }
+        else if (ShuffleEnabled)
+        {
+            var nextPosition = _shuffleQueuePosition + 1;
+            if (nextPosition < _shuffleQueue.Count)
+            {
+                next = _shuffleQueue[nextPosition];
+            }
+            // At the end of the queue with repeat on, the next pass is dealt lazily - nothing to show yet
+        }
+        else
+        {
+            var source = PlaybackSource;
+            if (source.Count > 0)
+            {
+                var index = CurrentTrack != null ? IndexOfTrack(source, CurrentTrack) : -1;
+                if (index + 1 < source.Count)
+                {
+                    next = source[index + 1];
+                }
+                else if (RepeatEnabled)
+                {
+                    next = source[0];
+                }
+            }
+        }
+
+        UpNextTrack = next;
+    }
+
+    private static int IndexOfTrack(IReadOnlyList<Track> list, Track track)
+    {
+        for (var i = 0; i < list.Count; i++)
+        {
+            if (ReferenceEquals(list[i], track)) return i;
+        }
+        return -1;
     }
 
     public void Dispose()

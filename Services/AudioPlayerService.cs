@@ -24,6 +24,9 @@ public class AudioPlayerService : IDisposable
 
     public bool IsPlaying => _streamHandle != 0 && Bass.ChannelIsActive(_streamHandle) == PlaybackState.Playing;
 
+    /// <summary>True while a track is loaded (playing, paused, or finished but not yet freed).</summary>
+    public bool HasStream => _streamHandle != 0;
+
     public long Length => _streamHandle != 0
         ? (long)(Bass.ChannelBytes2Seconds(_streamHandle, Bass.ChannelGetLength(_streamHandle)) * 1000)
         : 0;
@@ -288,7 +291,9 @@ public class AudioPlayerService : IDisposable
         var newSeconds = currentSeconds + (milliseconds / 1000.0);
         var totalSeconds = Bass.ChannelBytes2Seconds(_streamHandle, Bass.ChannelGetLength(_streamHandle));
 
-        newSeconds = Math.Clamp(newSeconds, 0, totalSeconds);
+        // Stay a hair before the end: seeking exactly to the end fails in BASS, while landing
+        // just before it lets the track finish naturally and advance to the next one.
+        newSeconds = Math.Clamp(newSeconds, 0, Math.Max(0, totalSeconds - 0.1));
         var newPosition = Bass.ChannelSeconds2Bytes(_streamHandle, newSeconds);
         Bass.ChannelSetPosition(_streamHandle, newPosition);
 

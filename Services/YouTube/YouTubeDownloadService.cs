@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using YoutubeExplode;
@@ -16,6 +18,8 @@ public class YouTubeDownloadService
 {
     private readonly YoutubeClient _youtube;
     private const int DelayBetweenDownloadsMs = 10000; // 10 seconds
+    private const int MaxDownloadAttempts = 2;         // fresh manifest + retry once when YouTube answers 403
+    private const int RetryDelayMs = 3000;
 
     public event EventHandler<DownloadProgressEventArgs>? ProgressChanged;
     public event EventHandler<DownloadCompletedEventArgs>? DownloadCompleted;
@@ -189,25 +193,107 @@ public class YouTubeDownloadService
 
     private async Task DownloadVideoAsync(IVideo video, string outputDirectory, CancellationToken cancellationToken)
     {
-        var streamManifest = await _youtube.Videos.Streams.GetManifestAsync(video.Id, cancellationToken);
+        var fileName = SanitizeFileName(video.Title);
+        Exception? lastError = null;
 
-        // Get the best WebM audio-only stream
-        var audioStreamInfo = streamManifest
-            .GetAudioOnlyStreams()
-            .Where(s => s.Container == Container.WebM)
-            .GetWithHighestBitrate();
-
-        if (audioStreamInfo == null)
+        for (var attempt = 1; attempt <= MaxDownloadAttempts; attempt++)
         {
-            throw new Exception("No WebM audio stream found for this video");
+            cancellationToken.ThrowIfCancellationRequested();
+
+            try
+            {
+                // Stream URLs are short-lived and signed, so every attempt asks YouTube for a fresh manifest
+                var streamManifest = await _youtube.Videos.Streams.GetManifestAsync(video.Id, cancellationToken);
+                var candidates = PickAudioStreams(streamManifest);
+
+                if (candidates.Count == 0)
+                {
+                    throw new InvalidOperationException("No audio-only stream was offered for this video");
+                }
+
+                foreach (var streamInfo in candidates)
+                {
+                    var filePath = Path.Combine(outputDirectory, $"{fileName}.{FileExtensionFor(streamInfo.Container)}");
+
+                    try
+                    {
+                        await _youtube.Videos.Streams.DownloadAsync(streamInfo, filePath, cancellationToken: cancellationToken);
+                        return;
+                    }
+                    catch (HttpRequestException ex) when (IsForbidden(ex))
+                    {
+                        // YouTube refused this particular stream URL - try the next container before giving up
+                        lastError = ex;
+                        TryDeleteFile(filePath);
+                    }
+                    catch
+                    {
+                        // Any other failure (including cancellation): don't leave a half-written file behind
+                        TryDeleteFile(filePath);
+                        throw;
+                    }
+                }
+            }
+            catch (HttpRequestException ex) when (IsForbidden(ex))
+            {
+                // The manifest request itself was refused
+                lastError = ex;
+            }
+
+            if (attempt < MaxDownloadAttempts)
+            {
+                await Task.Delay(RetryDelayMs, cancellationToken);
+            }
         }
 
-        // Sanitize filename
-        var fileName = SanitizeFileName(video.Title);
-        var filePath = Path.Combine(outputDirectory, $"{fileName}.webm");
+        throw new InvalidOperationException(
+            "YouTube refused to serve the audio stream (HTTP 403 Forbidden). YouTube changes its download " +
+            "protection regularly; waiting a while, or updating NoPlayer to a build with a newer YoutubeExplode, " +
+            "usually fixes it.",
+            lastError);
+    }
 
-        // Download the stream
-        await _youtube.Videos.Streams.DownloadAsync(audioStreamInfo, filePath, cancellationToken: cancellationToken);
+    /// <summary>
+    /// Best audio-only stream per container, WebM (Opus) first because that is what the player prefers,
+    /// then MP4 (AAC) as a fallback in case YouTube refuses the WebM one.
+    /// </summary>
+    private static List<IStreamInfo> PickAudioStreams(StreamManifest manifest)
+    {
+        var audioStreams = manifest.GetAudioOnlyStreams().ToList();
+        var candidates = new List<IStreamInfo>();
+
+        var webm = audioStreams.Where(s => s.Container == Container.WebM).TryGetWithHighestBitrate();
+        if (webm != null) candidates.Add(webm);
+
+        var mp4 = audioStreams.Where(s => s.Container == Container.Mp4).TryGetWithHighestBitrate();
+        if (mp4 != null) candidates.Add(mp4);
+
+        // Anything else YouTube might offer, as a last resort
+        var other = audioStreams
+            .Where(s => s.Container != Container.WebM && s.Container != Container.Mp4)
+            .TryGetWithHighestBitrate();
+        if (other != null) candidates.Add(other);
+
+        return candidates;
+    }
+
+    // Audio-only MP4 is conventionally .m4a, which is also what the library scanner looks for
+    private static string FileExtensionFor(Container container) =>
+        container == Container.Mp4 ? "m4a" : container.Name;
+
+    private static bool IsForbidden(HttpRequestException ex) =>
+        ex.StatusCode == HttpStatusCode.Forbidden || ex.Message.Contains("403", StringComparison.Ordinal);
+
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+        catch
+        {
+            // A leftover partial file is not worth failing the download over
+        }
     }
 
     private static string SanitizeFileName(string fileName)

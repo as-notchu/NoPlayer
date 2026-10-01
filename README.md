@@ -1,6 +1,8 @@
 # 🎵 Music Player
 
-A modern, cross-platform music player built with .NET and Avalonia. Downloading music from YT currently does not work.
+A modern, cross-platform music player built with .NET and Avalonia.
+
+> **Note on YouTube downloads:** they rely on [YoutubeExplode](https://github.com/Tyrrrz/YoutubeExplode), and YouTube changes its download protection regularly. If downloads start failing with a `403 Forbidden` error, updating the `YoutubeExplode` package in `MusicPlayer.csproj` to the latest version is usually the fix.
 
 **Download:** [Latest Release](https://github.com/as-notchu/Music-Player/releases)
 
@@ -12,9 +14,26 @@ A modern, cross-platform music player built with .NET and Avalonia. Downloading 
 - 📝 Create and manage playlists
 - 🔍 Search your music library
 - 📁 Support for multiple music directories
-- 🎨 Clean, intuitive interface
+- 🔀 Shuffle that deals a random queue of the current list, with an "Up next" hint
+- ⏩ Fast-forward / rewind 10 seconds, plus click-and-drag scrubbing on the progress bar
+- ⌨️ Keyboard transport controls (see below)
+- 🎨 Dark neon interface with a sidebar for playlists and sources
 - ⚡ Fast and lightweight
 - 📥 Download music from YouTube playlists
+
+### Keyboard shortcuts
+
+| Key | Action |
+| --- | --- |
+| `Space` | Play / pause |
+| `←` / `→` | Rewind / fast-forward 10 seconds |
+| `Ctrl+←` / `Ctrl+→` (`⌘` on macOS) | Previous / next track |
+
+Shortcuts are ignored while you are typing in a text box.
+
+### How shuffle works
+
+Turning shuffle on deals a random queue from whatever you are looking at (a playlist or the whole library), starting with the song that is already playing. **Next** and **Previous** simply walk forwards and backwards through that queue, so going back always returns to the song you just heard. Picking a song from the list jumps to its spot in the queue. When the queue runs out, playback stops, or a fresh queue is dealt if **Repeat** is on. Searching never reshuffles the queue.
 
 ---
 
@@ -25,7 +44,7 @@ This feature allows you to download entire YouTube playlists directly into your 
 ### How to Use:
 
 1. **Open the Download Window**
-   - Click the YouTube download button in the main interface
+   - Click the **YouTube** button under **Sources** in the sidebar
    - A new window will appear with the download options
 
 2. **Enter Playlist URL**
@@ -45,7 +64,7 @@ This feature allows you to download entire YouTube playlists directly into your 
    - Once the download finishes, a "Copy Path" button will appear
    - Click "Copy Path" to copy the save directory location to your clipboard
    - Return to the main player window
-   - Click "Add Directory" and paste the copied path
+   - Paste the copied path into the "Paste folder paths" box under **Sources** in the sidebar and click **+**
    - Your downloaded playlist will now be available in your music library
 
 ### Tips:
@@ -56,8 +75,10 @@ This feature allows you to download entire YouTube playlists directly into your 
 ---
 
 ## Screenshots
-<img width="600" height="490" alt="image" src="https://github.com/user-attachments/assets/c5bf6a89-4a39-4fb6-9a04-46a42abcb17e" />
-<img width="600" height="600" alt="image" src="https://github.com/user-attachments/assets/aa56fd08-5e68-4d35-8019-da8a81870ce8" />
+<img width="1408" height="932" alt="image" src="https://github.com/user-attachments/assets/56db8125-2509-446b-bc4b-2a596833921b" />
+
+<img width="863" height="844" alt="image" src="https://github.com/user-attachments/assets/147f32e8-6807-40b5-ba30-fd9e4cdebd7a" />
+
 
 
 ## 📥 Installation
