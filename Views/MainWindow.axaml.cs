@@ -144,34 +144,33 @@ public partial class MainWindow : Window
     {
         if (ViewModel is not { } viewModel) return;
 
-        var textBox = DirectoriesTextBox;
-        if (string.IsNullOrWhiteSpace(textBox.Text)) return;
+        var topLevel = GetTopLevel(this);
+        if (topLevel == null) return;
 
-        // Split by comma or newline
-        var paths = textBox.Text
-            .Split(new[] { ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
-            .Select(p => p.Trim())
+        var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = "Add Music Folders",
+            AllowMultiple = true
+        });
+
+        var paths = folders
+            .Select(f => f.TryGetLocalPath())
             .Where(p => !string.IsNullOrWhiteSpace(p))
+            .Select(p => p!)
             .ToList();
 
-        if (paths.Count == 0)
-        {
-            viewModel.StatusMessage = "No valid directories entered";
-            return;
-        }
+        if (paths.Count == 0) return; // Picker was cancelled
 
-        // Add each directory
-        foreach (var path in paths)
+        var added = paths.Count(viewModel.AddMusicDirectory);
+        if (added == 0)
         {
-            viewModel.AddMusicDirectory(path);
+            viewModel.StatusMessage = "Those folders are already in the library";
+            return;
         }
 
         // Refresh library
         await viewModel.LoadLibraryCommand.ExecuteAsync(null);
-
-        // Clear the text box
-        textBox.Text = string.Empty;
-        viewModel.StatusMessage = $"Added {paths.Count} directory(ies)";
+        viewModel.StatusMessage = added == 1 ? "Added 1 folder" : $"Added {added} folders";
     }
 
     private async void OpenDownloadWindow_Click(object? sender, RoutedEventArgs e)

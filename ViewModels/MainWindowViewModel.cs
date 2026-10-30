@@ -608,13 +608,16 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         _settingsService.UpdateMusicFolder(path);
     }
 
-    public void AddMusicDirectory(string path)
+    public bool AddMusicDirectory(string path)
     {
         if (!string.IsNullOrEmpty(path) && System.IO.Directory.Exists(path) && !MusicDirectories.Contains(path))
         {
             MusicDirectories.Add(path);
             _settingsService.UpdateMusicDirectories(MusicDirectories.ToList());
+            return true;
         }
+
+        return false;
     }
 
     public void RemoveMusicDirectory(string path)

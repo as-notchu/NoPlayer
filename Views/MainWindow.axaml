@@ -143,22 +143,16 @@
                                 </Button>
                             </Grid>
 
-                            <Grid ColumnDefinitions="*,Auto">
-                                <TextBox Grid.Column="0"
-                                         x:Name="DirectoriesTextBox"
-                                         Classes="input compact"
-                                         AcceptsReturn="False"
-                                         Watermark="Paste folder paths"
-                                         ToolTip.Tip="Paste one or more folder paths, separated by commas"/>
-                                <Button Grid.Column="1"
-                                        Classes="icon"
-                                        Margin="6,0,0,0"
-                                        Width="32" Height="32"
-                                        Click="AddDirectories_Click"
-                                        ToolTip.Tip="Add folders to the library">
-                                    <PathIcon Data="{StaticResource IconPlus}" Width="15" Height="15"/>
-                                </Button>
-                            </Grid>
+                            <Button Classes="secondary"
+                                    HorizontalAlignment="Stretch"
+                                    Click="AddDirectories_Click"
+                                    IsEnabled="{Binding !IsLoading}"
+                                    ToolTip.Tip="Pick one or more folders to add to the library">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <PathIcon Data="{StaticResource IconPlus}"/>
+                                    <TextBlock Text="Add folders" FontSize="12" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
 
                             <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
                                 <Button Grid.Column="0"
