@@ -82,7 +82,8 @@ public class YouTubeDownloadService
                         videos.Count,
                         video.Title));
 
-                    await DownloadVideoAsync(video, playlistOutputDirectory, cancellationToken);
+                    var filePath = await DownloadVideoAsync(video, playlistOutputDirectory, cancellationToken);
+                    await EmbedCoverArtAsync(video, filePath, i, videos.Count, cancellationToken);
 
                     OnDownloadCompleted(new DownloadCompletedEventArgs(video.Title, i + 1, videos.Count));
 
@@ -161,7 +162,8 @@ public class YouTubeDownloadService
                         urls.Count,
                         video.Title));
 
-                    await DownloadVideoAsync(video, outputDirectory, cancellationToken);
+                    var filePath = await DownloadVideoAsync(video, outputDirectory, cancellationToken);
+                    await EmbedCoverArtAsync(video, filePath, i, urls.Count, cancellationToken);
 
                     OnDownloadCompleted(new DownloadCompletedEventArgs(video.Title, i + 1, urls.Count));
 
@@ -191,7 +193,8 @@ public class YouTubeDownloadService
         }
     }
 
-    private async Task DownloadVideoAsync(IVideo video, string outputDirectory, CancellationToken cancellationToken)
+    /// <returns>Path of the saved audio file</returns>
+    private async Task<string> DownloadVideoAsync(IVideo video, string outputDirectory, CancellationToken cancellationToken)
     {
         var fileName = SanitizeFileName(video.Title);
         Exception? lastError = null;
@@ -218,7 +221,7 @@ public class YouTubeDownloadService
                     try
                     {
                         await _youtube.Videos.Streams.DownloadAsync(streamInfo, filePath, cancellationToken: cancellationToken);
-                        return;
+                        return filePath;
                     }
                     catch (HttpRequestException ex) when (IsForbidden(ex))
                     {
@@ -251,6 +254,24 @@ public class YouTubeDownloadService
             "protection regularly; waiting a while, or updating NoPlayer to a build with a newer YoutubeExplode, " +
             "usually fixes it.",
             lastError);
+    }
+
+    /// <summary>
+    /// Saves the video's thumbnail as the cover picture of the downloaded file.
+    /// A missing cover is only logged - the song itself is already downloaded at this point.
+    /// </summary>
+    private async Task EmbedCoverArtAsync(IVideo video, string filePath, int index, int totalCount, CancellationToken cancellationToken)
+    {
+        OnProgressChanged(new DownloadProgressEventArgs($"Adding cover art: {video.Title}", index, totalCount, video.Title));
+
+        if (!await CoverArtEmbedder.TryEmbedAsync(video, filePath, cancellationToken))
+        {
+            OnProgressChanged(new DownloadProgressEventArgs(
+                $"Could not add cover art for '{video.Title}' - the song was saved without it",
+                index,
+                totalCount,
+                video.Title));
+        }
     }
 
     /// <summary>
